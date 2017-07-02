@@ -3,20 +3,66 @@
 #include "gameNode.h"
 #include "camera.h"
 
+struct tagfakebutton
+{
+	RECT rc;
+	bool select;
+	bool onmouse;
+};
+
+enum selecttilekind
+{
+	S_NONE,
+	S_FLOOR,
+	W_FLOOR,
+	S_WALL,
+	S_WALL_PIECE,
+	W_WALL,
+	W_WALL_PIECE,
+	CARPT,
+	CARPT_PIECE,
+	W_BARREL,
+	B_BARREL
+};
+
+struct tagbigsample
+{
+	selecttilekind kind;
+	RECT rc;
+	bool select;
+};
+
+enum drawtype
+{
+	D_NONE,
+	STICK,
+	SAMIAUTO,
+	AUTO
+};
+
 class mapTool : public gameNode
 {
 private:
-	tagTile _tile[TILEY][TILEX];
-	image* _img; //카메라에서 사용할 친구
-	image* _sample; //타일 샘플
-	image* _book; //타일 선택창
-	image* _alhpa; //미니맵으로 사용할거 알파블랜더 테스트
-	POINT _campt, _mouse, _ptadd; //카메라 이동에 의한 마우스 좌표동기화에 필요한 변수
-	POINT _start, _end; //선택한 타일 구간의 배열 받으려고 했는데 기각 end는 삭제예정
-	RECT _dragrc; //선택한 타일 구간 확인할 렉트
-	bool _sampleOpen; //타일선택창 열었는지 확인
+	image* _img;						//카메라에서 사용할 이미지
+	image* _sample;						//타일 샘플 이미지
+	image* _book;						//타일 선택창 이미지
+	image* _alhpa;						//미니맵으로 사용할거 알파블랜더 테스트 이미지
+
+	tagTile _tile[TILEY][TILEX];		//타일
+	tagfakebutton _tagbutton[5];		//샘플북 태그
+	drawtype _nowdraw;					//선택한 타일 드로우 방식
+	selecttilekind _nowselecct;			//현재 선택한 타일
+
+	POINT _campt, _mouse, _ptadd;		//카메라 이동에 의한 마우스 좌표동기화에 필요한 포인트 변수
+	POINT _start;						//드래그 영역 그릴때 처음 클릭한 좌표 저장하는 포인트 변수
 	
-	camera* _cam;
+	RECT _dragrc;						//드래그 영역 그려줄 렉트
+	tagbigsample _bigsample[5][2];		//샘플 이미지 그려줄 RC
+	
+	bool _sampleOpen;					//타일선택창 열었는지 확인
+	int _page;							//지금 펼치고 있는 샘플북 페이지
+	
+	camera* _cam;						//카메라아아아
 public:
 	virtual HRESULT init(void);
 	virtual void release(void);
@@ -27,6 +73,7 @@ public:
 	virtual void setup(void);
 	virtual void keycontrol(void);
 	virtual void tileselect(void);
+	virtual void pageselect(void);
 	virtual void tiledraw(void);
 	virtual void mousemove(void);
 	virtual void draw(void);

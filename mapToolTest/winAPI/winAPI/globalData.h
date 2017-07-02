@@ -16,6 +16,8 @@ enum TERRAIN
 	EMPTY,
 	STON_FLOOR,
 	WOOD_FLOOR,
+	STON_WALL,
+	BOOK_WALL,
 	CARPET
 };
 
@@ -25,8 +27,6 @@ enum OBJECT
 	BLANK,
 	WOOD_BARREL,
 	BOOM_BARREL,
-	STON_WALL,
-	BOOK_WALL,
 	TABLE_WIDTH,
 	TABLE_LENGTH
 };
@@ -36,5 +36,8 @@ struct tagTile
 	TERRAIN terrain;
 	OBJECT obj;
 	RECT rc;
-	int frameX, frameY;
+	bool pass;
+	int roomnum, sponSequence;
+	int terrainX, terrainY;
+	int objframeX, objframeY;
 };

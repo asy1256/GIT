@@ -43,6 +43,6 @@ void gameStudy::render(void)
 {
 	IMAGEMANAGER->findImage("mapImage")->render(getMemDC());
 	SCENEMANAGER->render();
-	//TIMEMANAGER->render(getMemDC());
+	TIMEMANAGER->render(getMemDC());
 	this->getBackBuffer()->render(getHDC(), 0, 0);
 }

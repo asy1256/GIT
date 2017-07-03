@@ -8,6 +8,8 @@ HINSTANCE _hInstance;
 HWND _hWnd;
 POINT _ptMouse;
 bool _leftButtonDown;
+bool _wheelUp;
+bool _wheelDown;
 
 gameStudy _gs;
 

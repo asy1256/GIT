@@ -19,17 +19,16 @@ enum selecttilekind
 	S_WALL_PIECE,
 	W_WALL,
 	W_WALL_PIECE,
-	CARPT,
-	CARPT_PIECE,
+	CARPT_A,
+	CARPT_B,
+	CARPT_A_PIECE,
+	CARPT_B_PIECE,
 	W_BARREL,
-	B_BARREL
-};
-
-struct tagbigsample
-{
-	selecttilekind kind;
-	RECT rc;
-	bool select;
+	B_BARREL,
+	TELEPORTER,
+	DOOR,
+	L_TABLE,
+	W_TABLE
 };
 
 enum drawtype
@@ -38,6 +37,14 @@ enum drawtype
 	STICK,
 	SAMIAUTO,
 	AUTO
+};
+
+struct tagbigsample
+{
+	selecttilekind kind;
+	drawtype type;
+	RECT rc;
+	bool select;
 };
 
 class mapTool : public gameNode
@@ -61,6 +68,9 @@ private:
 	
 	bool _sampleOpen;					//타일선택창 열었는지 확인
 	int _page;							//지금 펼치고 있는 샘플북 페이지
+	float _scroolmax;
+	float _currentscrool;
+	float _scroolpos;
 	
 	camera* _cam;						//카메라아아아
 public:

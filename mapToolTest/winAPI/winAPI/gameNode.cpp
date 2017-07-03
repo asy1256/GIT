@@ -114,6 +114,16 @@ LRESULT gameNode::MainProc(HWND hWnd, UINT iMessage,
 		case WM_LBUTTONUP:
 			_leftButtonDown = false;
 		break;
+		case WM_MOUSEWHEEL:
+			if ((SHORT)HIWORD(wParam) > 0)
+			{
+				_wheelUp = true;
+			}
+			else
+			{
+				_wheelDown = true;
+			}
+			break;
 		case WM_KEYDOWN:
 			switch ( wParam )
 			{

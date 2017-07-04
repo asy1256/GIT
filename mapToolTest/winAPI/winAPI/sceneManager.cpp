@@ -24,7 +24,7 @@ void sceneManager::release(void)
 		//지워지면 반복자 증가시키지 않는다
 		if (iter->second != NULL)
 		{
-			iter->second->release();
+			if (iter->second == _currentScene) iter->second->release();
 			SAFE_DELETE(iter->second);
 			iter = _mSceneList.erase(iter);
 		}

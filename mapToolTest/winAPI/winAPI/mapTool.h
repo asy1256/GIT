@@ -28,7 +28,11 @@ enum selecttilekind
 	TELEPORTER,
 	DOOR,
 	L_TABLE,
-	W_TABLE
+	W_TABLE,
+	K_BULLET,
+	B_BULLET,
+	R_SHOTGUN,
+	GUNUT
 };
 
 enum drawtype
@@ -65,12 +69,13 @@ private:
 	
 	RECT _dragrc;						//드래그 영역 그려줄 렉트
 	tagbigsample _bigsample[5][2];		//샘플 이미지 그려줄 RC
+	tagbigsample _enemysample[2][2];	//적군 샘플 그려줄 RC
 	
 	bool _sampleOpen;					//타일선택창 열었는지 확인
 	int _page;							//지금 펼치고 있는 샘플북 페이지
-	float _scroolmax;
-	float _currentscrool;
-	float _scroolpos;
+	float _scroolmax;					//스크롤바 최대치
+	float _currentscrool;				//스크롤바 수치
+	float _scroolpos;					//현재 스크롤바 위치
 	
 	camera* _cam;						//카메라아아아
 public:
@@ -86,6 +91,7 @@ public:
 	virtual void pageselect(void);
 	virtual void tiledraw(void);
 	virtual void mousemove(void);
+	virtual void bookup(void);
 	virtual void draw(void);
 	virtual void selectdraw(void);
 

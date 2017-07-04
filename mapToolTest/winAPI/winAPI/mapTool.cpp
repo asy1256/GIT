@@ -30,23 +30,7 @@ void mapTool::update(void)
 	keycontrol();
 	mousemove();
 	_cam->update();
-	//샘플북 버튼 위치 갱신
-	for (int y = 40, i = 0; i < 5; ++i, y += 50)
-	{
-		_tagbutton[i].rc = RectMake(_cam->getRC().right - IMAGEMANAGER->findImage("booktag")->getFrameWidth() - _book->getWidth() + 10, _cam->getRC().top + y,
-			IMAGEMANAGER->findImage("booktag")->getFrameWidth(), IMAGEMANAGER->findImage("booktag")->getFrameHeight());
-	}
-	//빅샘플 케이스 위치 갱신
-	for (int sy = 94, y = 0; y < 5; ++y, sy += 240)
-	{
-		for (int sx = 0, x = 0; x < 2; ++x, sx += 160)
-		{
-			_bigsample[y][x].rc = RectMake(_cam->getRC().right - 350 + sx, _cam->getRC().top + sy - _currentscrool,
-				IMAGEMANAGER->findImage("bigsamplecase")->getFrameWidth(), IMAGEMANAGER->findImage("bigsamplecase")->getFrameHeight());
-		}
-	}
-	//스크롤바 갱신
-	_scroolpos = (_currentscrool / _scroolmax) * 512;
+	bookup();
 }
 
 void mapTool::render(void)
@@ -67,11 +51,13 @@ void mapTool::setup(void)
 		IMAGEMANAGER->addImage("no", "tileno.bmp", 64, 64, true);
 		IMAGEMANAGER->addImage("cover", "bookcover.bmp", 400, 768, true);
 		IMAGEMANAGER->addFrameImage("bigsample", "bigsample.bmp", 240, 800, 2, 5, true);
+		IMAGEMANAGER->addFrameImage("enemysample", "enemysample.bmp", 240, 320, 2, 2, true);
 		IMAGEMANAGER->addFrameImage("bigsamplecase", "bigsamplecase.bmp", 280, 220, 2, 1, true);
 		IMAGEMANAGER->addFrameImage("booktag", "booktag.bmp", 100, 300, 2, 10, true);
 		IMAGEMANAGER->addImage("scrollbardown", "scrollbarplace.bmp", 14, 580, true);
 		IMAGEMANAGER->addImage("scrollbar", "scrollbar.bmp", 14, 68, true);
 		IMAGEMANAGER->addFrameImage("barrels", "barrels.bmp", 128, 96, 2, 1, true);
+		IMAGEMANAGER->addFrameImage("enemys", "enemys.bmp", 192, 256, 2, 2, true);
 	}
 	//다양한 변수 초기화
 	{
@@ -86,6 +72,9 @@ void mapTool::setup(void)
 		_nowdraw = D_NONE;
 		_nowselecct = S_NONE;
 	}
+
+	SetTextColor(getBackDC(), RGB(255, 255, 255));
+	SetBkMode(getBackDC(), TRANSPARENT);
 
 	_cam = new camera;
 	_cam->init(&_campt, _img);
@@ -111,6 +100,19 @@ void mapTool::setup(void)
 			if (y == 4) { _bigsample[y][x].type = STICK; _bigsample[y][x].kind = (x == 0) ? W_BARREL : B_BARREL; }
 			_bigsample[y][x].select = false;
 			_bigsample[y][x].rc = RectMake(_cam->getRC().right - 350 + sx, _cam->getRC().top + sy,
+				IMAGEMANAGER->findImage("bigsamplecase")->getFrameWidth(), IMAGEMANAGER->findImage("bigsamplecase")->getFrameHeight());
+		}
+	}
+
+	//에너미샘플케이스 초기화
+	for (int sy = 94, y = 0; y < 2; ++y, sy += 240)
+	{
+		for (int sx = 0, x = 0; x < 2; ++x, sx += 160)
+		{
+			if (y == 0) { _enemysample[y][x].type = STICK; _enemysample[y][x].kind = (x == 0) ? K_BULLET : B_BULLET; }
+			if (y == 1) { _enemysample[y][x].type = STICK; _enemysample[y][x].kind = (x == 0) ? R_SHOTGUN : GUNUT; }
+			_enemysample[y][x].select = false;
+			_enemysample[y][x].rc = RectMake(_cam->getRC().right - 350 + sx, _cam->getRC().top + sy,
 				IMAGEMANAGER->findImage("bigsamplecase")->getFrameWidth(), IMAGEMANAGER->findImage("bigsamplecase")->getFrameHeight());
 		}
 	}
@@ -158,7 +160,7 @@ void mapTool::keycontrol(void)
 			_ptadd.x += 12;
 		}
 	}
-	//스크롤바 이동
+	//마우스 휠 액션
 	if (_sampleOpen)
 	{
 		if (_wheelUp)
@@ -182,7 +184,20 @@ void mapTool::keycontrol(void)
 	}
 	else
 	{
+		int x = _mouse.x / TILESIZE;
+		int y = _mouse.y / TILESIZE;
 
+		if (_tile[y][x].obj == BULLET_KIN || _tile[y][x].obj == BULLET_BANDANA || _tile[y][x].obj == SHOTGUN_RED || _tile[y][x].obj == GUN_NUT)
+		{
+			if (_wheelUp) { ++_tile[y][x].sponSequence; }
+			if (_wheelDown)
+			{
+				--_tile[y][x].sponSequence;
+				if (_tile[y][x].sponSequence <= 1) { _tile[y][x].sponSequence = 1; }
+			}
+		}
+		_wheelUp = false;
+		_wheelDown = false;
 	}
 	//타일에 그림그리기
 	{
@@ -260,6 +275,7 @@ void mapTool::keycontrol(void)
 
 void mapTool::tileselect(void)
 {
+	//오브젝트 페이지
 	if (_page == 1)
 	{
 		int sy = 0, sx = 0;
@@ -283,6 +299,33 @@ void mapTool::tileselect(void)
 			{
 				if (sy == y && sx == x) { continue; }
 				_bigsample[y][x].select = false;
+			}
+		}
+	}
+	//몬스터 페이지
+	if (_page == 2)
+	{
+		int sy = 0, sx = 0;
+		for (int y = 0; y < 2; ++y)
+		{
+			for (int x = 0; x < 2; ++x)
+			{
+				if (PtInRect(&_enemysample[y][x].rc, _mouse))
+				{
+					_enemysample[y][x].select = true;
+					_nowselecct = _enemysample[y][x].kind;
+					_nowdraw = _enemysample[y][x].type;
+					sy = y; sx = x;
+				}
+			}
+		}
+
+		for (int y = 0; y < 2; ++y)
+		{
+			for (int x = 0; x < 2; ++x)
+			{
+				if (sy == y && sx == x) { continue; }
+				_enemysample[y][x].select = false;
 			}
 		}
 	}
@@ -313,7 +356,9 @@ void mapTool::tiledraw(void)
 		//가로 테이블
 		if (_nowselecct == W_TABLE)
 		{
-			if (_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx + 1].obj == NONE)
+			if (_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx + 1].obj == NONE &&
+				(_tile[nowy][nowx].terrain != BOOK_WALL && _tile[nowy][nowx].terrain != STON_WALL) &&
+				(_tile[nowy][nowx + 1].terrain != BOOK_WALL && _tile[nowy][nowx + 1].terrain != STON_WALL))
 			{
 				_tile[nowy][nowx].objframeX = 3;
 				_tile[nowy][nowx].objframeY = 5;
@@ -326,7 +371,9 @@ void mapTool::tiledraw(void)
 		//세로 테이블
 		if (_nowselecct == L_TABLE)
 		{
-			if (_tile[nowy][nowx].obj == NONE && _tile[nowy - 1][nowx].obj == NONE)
+			if (_tile[nowy][nowx].obj == NONE && _tile[nowy - 1][nowx].obj == NONE &&
+				(_tile[nowy][nowx].terrain != BOOK_WALL && _tile[nowy][nowx].terrain != STON_WALL) &&
+				(_tile[nowy - 1][nowx].terrain != BOOK_WALL && _tile[nowy - 1][nowx].terrain != STON_WALL))
 			{
 				_tile[nowy][nowx].objframeX = 6;
 				_tile[nowy][nowx].objframeY = 6;
@@ -336,15 +383,28 @@ void mapTool::tiledraw(void)
 				_tile[nowy - 1][nowx].obj = BLANK;
 			}
 		}
-		//나무 통
-		if (_nowselecct == W_BARREL)
+		//나무 통 or 폭탄통
+		if (_nowselecct == W_BARREL || _nowselecct == B_BARREL)
 		{
-			if (_tile[nowy][nowx].obj == NONE && (_tile[nowy][nowx].terrain != BOOK_WALL && _tile[nowy][nowx].terrain != STON_WALL)) { _tile[nowy][nowx].obj = WOOD_BARREL; }
+			if (_tile[nowy][nowx].obj == NONE && (_tile[nowy][nowx].terrain != BOOK_WALL && _tile[nowy][nowx].terrain != STON_WALL)) { _tile[nowy][nowx].obj = (_nowselecct == W_BARREL) ? WOOD_BARREL : BOOM_BARREL; }
 		}
-		//폭탄 통
-		if (_nowselecct == B_BARREL)
+		//총알 or 반달리스트
+		if (_nowselecct == K_BULLET || _nowselecct == B_BULLET)
 		{
-			if (_tile[nowy][nowx].obj == NONE) { _tile[nowy][nowx].obj = BOOM_BARREL; }
+			if (_tile[nowy][nowx].obj == NONE && (_tile[nowy][nowx].terrain != BOOK_WALL && _tile[nowy][nowx].terrain != STON_WALL))
+			{
+				_tile[nowy][nowx].obj = (_nowselecct == K_BULLET) ? BULLET_KIN : BULLET_BANDANA;
+				_tile[nowy][nowx].sponSequence = 1;
+			}
+		}
+		//샷건 or 건넛
+		if (_nowselecct == R_SHOTGUN || _nowselecct == GUNUT)
+		{
+			if (_tile[nowy][nowx].obj == NONE && (_tile[nowy][nowx].terrain != BOOK_WALL && _tile[nowy][nowx].terrain != STON_WALL))
+			{
+				_tile[nowy][nowx].obj = (_nowselecct == R_SHOTGUN) ? SHOTGUN_RED : GUN_NUT;
+				_tile[nowy][nowx].sponSequence = 1;
+			}
 		}
 	}
 	else if (_nowdraw == SAMIAUTO) //반자동 그리기
@@ -559,8 +619,39 @@ void mapTool::mousemove(void)
 	_mouse.y = temp.y + _ptadd.y;
 }
 
+void mapTool::bookup(void)
+{
+	//샘플북 버튼 위치 갱신
+	for (int y = 40, i = 0; i < 5; ++i, y += 50)
+	{
+		_tagbutton[i].rc = RectMake(_cam->getRC().right - IMAGEMANAGER->findImage("booktag")->getFrameWidth() - _book->getWidth() + 10, _cam->getRC().top + y,
+			IMAGEMANAGER->findImage("booktag")->getFrameWidth(), IMAGEMANAGER->findImage("booktag")->getFrameHeight());
+	}
+	//빅샘플 케이스 위치 갱신
+	for (int sy = 94, y = 0; y < 5; ++y, sy += 240)
+	{
+		for (int sx = 0, x = 0; x < 2; ++x, sx += 160)
+		{
+			_bigsample[y][x].rc = RectMake(_cam->getRC().right - 350 + sx, _cam->getRC().top + sy - _currentscrool,
+				IMAGEMANAGER->findImage("bigsamplecase")->getFrameWidth(), IMAGEMANAGER->findImage("bigsamplecase")->getFrameHeight());
+		}
+	}
+	//에너미 샘플 케이스 위치 갱신
+	for (int sy = 94, y = 0; y < 2; ++y, sy += 240)
+	{
+		for (int sx = 0, x = 0; x < 2; ++x, sx += 160)
+		{
+			_enemysample[y][x].rc = RectMake(_cam->getRC().right - 350 + sx, _cam->getRC().top + sy,
+				IMAGEMANAGER->findImage("bigsamplecase")->getFrameWidth(), IMAGEMANAGER->findImage("bigsamplecase")->getFrameHeight());
+		}
+	}
+	//스크롤바 갱신
+	_scroolpos = (_currentscrool / _scroolmax) * 512;
+}
+
 void mapTool::draw(void)
 {
+	char str[8];
 	//거 뭐시기냐 그 바닥을 그립니다.
 	for (int y = 0; y < TILEY; ++y)
 	{
@@ -583,11 +674,32 @@ void mapTool::draw(void)
 	{
 		for (int x = 0; x < TILEX; ++x)
 		{
+			sprintf(str, "%d", _tile[y][x].sponSequence);
 			if (!IntersectRect(&RectMake(0, 0, 0, 0), &_tile[y][x].rc, &_cam->getRC())) { continue; } //클리핑 영역 안에 없으면 넘어가
 			if (_tile[y][x].obj == NONE) { continue; } //오브젝트가 안깔려 있어도 넘어가
 			if ((_tile[y][x].terrain == STON_WALL || _tile[y][x].terrain == BOOK_WALL) && _tile[y][x].pass) { continue; } //벽이 세워져 있으면 넘어가
 			if (_tile[y][x].obj == WOOD_BARREL) { IMAGEMANAGER->findImage("barrels")->frameRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - 32, 0, 0); continue; } //나무통이면 그리고 넘어가
 			else if (_tile[y][x].obj == BOOM_BARREL) { IMAGEMANAGER->findImage("barrels")->frameRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - 32, 1, 0); continue; } //폭탄통이면 그리고 넘어가
+			else if (_tile[y][x].obj == BULLET_KIN) //총알이면 그리고 넘어가
+			{
+				IMAGEMANAGER->findImage("enemys")->frameRender(getBackDC(), _tile[y][x].rc.left - 32, _tile[y][x].rc.top - 64, 0, 0);
+				TextOut(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - 32, str, strlen(str)); continue;
+			}
+			else if (_tile[y][x].obj == BULLET_BANDANA) //반달리스트면 그리고 넘어가
+			{
+				IMAGEMANAGER->findImage("enemys")->frameRender(getBackDC(), _tile[y][x].rc.left - 32, _tile[y][x].rc.top - 64 , 1, 0);
+				TextOut(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - 32, str, strlen(str)); continue;
+			} 
+			else if (_tile[y][x].obj == SHOTGUN_RED) //샷건이면 그리고 넘어가
+			{
+				IMAGEMANAGER->findImage("enemys")->frameRender(getBackDC(), _tile[y][x].rc.left - 32, _tile[y][x].rc.top - 64, 0, 1);
+				TextOut(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - 48, str, strlen(str)); continue;
+			}
+			else if (_tile[y][x].obj == GUN_NUT) //건넛이면 그리고 넘어가
+			{
+				IMAGEMANAGER->findImage("enemys")->frameRender(getBackDC(), _tile[y][x].rc.left - 32, _tile[y][x].rc.top - 64, 1, 1);
+				TextOut(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - 48, str, strlen(str)); continue;
+			}
 			_sample->frameRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top, _tile[y][x].objframeX, _tile[y][x].objframeY);
 		}
 	}
@@ -613,6 +725,7 @@ void mapTool::draw(void)
 	{
 		_book->render(getBackDC(), _cam->getRC().right - _book->getWidth(), _cam->getRC().top);
 
+		//오브젝트 류
 		if (_page == 1)
 		{
 			for (int y = 0; y < 5; ++y)
@@ -622,6 +735,19 @@ void mapTool::draw(void)
 					if (_bigsample[y][x].select) { IMAGEMANAGER->findImage("bigsamplecase")->frameRender(getBackDC(), _bigsample[y][x].rc.left, _bigsample[y][x].rc.top, 1, 0); }
 					else { IMAGEMANAGER->findImage("bigsamplecase")->frameRender(getBackDC(), _bigsample[y][x].rc.left, _bigsample[y][x].rc.top, 0, 0); }
 					IMAGEMANAGER->findImage("bigsample")->frameRender(getBackDC(), _bigsample[y][x].rc.left + 10, _bigsample[y][x].rc.top + 30, x, y);
+				}
+			}
+		}
+		//몬스터 류
+		if (_page == 2)
+		{
+			for (int y = 0; y < 2; ++y)
+			{
+				for (int x = 0; x < 2; ++x)
+				{
+					if (_enemysample[y][x].select) { IMAGEMANAGER->findImage("bigsamplecase")->frameRender(getBackDC(), _enemysample[y][x].rc.left, _enemysample[y][x].rc.top, 1, 0); }
+					else { IMAGEMANAGER->findImage("bigsamplecase")->frameRender(getBackDC(), _enemysample[y][x].rc.left, _enemysample[y][x].rc.top, 0, 0); }
+					IMAGEMANAGER->findImage("enemysample")->frameRender(getBackDC(), _enemysample[y][x].rc.left + 10, _enemysample[y][x].rc.top + 30, x, y);
 				}
 			}
 		}

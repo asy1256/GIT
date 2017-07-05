@@ -32,7 +32,8 @@ enum OBJECT
 	BULLET_KIN,
 	BULLET_BANDANA,
 	SHOTGUN_RED,
-	GUN_NUT
+	GUN_NUT,
+	SHOP_MASTER
 };
 
 struct tagTile

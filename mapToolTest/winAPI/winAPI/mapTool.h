@@ -37,7 +37,6 @@ enum selecttilekind
 	SHOP_ROOM,
 	STON_ROOM,
 	WOOD_ROOM,
-	BOX_ROOM,
 	T_ERASE,
 	OB_ERASE,
 	R_ERASE
@@ -79,6 +78,7 @@ private:
 	RECT _dragrc;						//드래그 영역 그려줄 렉트
 	tagbigsample _bigsample[5][2];		//샘플 이미지 그려줄 RC
 	tagbigsample _enemysample[2][2];	//적군 샘플 그려줄 RC
+	tagbigsample _roomsample[2][2];		//방 샘플 그려줄 RC
 	tagbigsample _option[5];			//맵툴 옵션 버튼
 	
 	bool _sampleOpen;					//타일선택창 열었는지 확인

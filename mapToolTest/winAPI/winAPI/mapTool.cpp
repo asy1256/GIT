@@ -50,10 +50,11 @@ void mapTool::setup(void)
 		IMAGEMANAGER->addImage("ok", "tileok.bmp", 64, 64, true);
 		IMAGEMANAGER->addImage("no", "tileno.bmp", 64, 64, true);
 		IMAGEMANAGER->addImage("cover", "bookcover.bmp", 400, 768, true);
+		IMAGEMANAGER->addFrameImage("bigsamplecase", "bigsamplecase.bmp", 280, 220, 2, 1, true);
+		IMAGEMANAGER->addFrameImage("mapoption", "mapoption.bmp", 600, 540, 2, 5, true);
 		IMAGEMANAGER->addFrameImage("bigsample", "bigsample.bmp", 240, 800, 2, 5, true);
 		IMAGEMANAGER->addFrameImage("enemysample", "enemysample.bmp", 240, 320, 2, 2, true);
-		IMAGEMANAGER->addFrameImage("bigsamplecase", "bigsamplecase.bmp", 280, 220, 2, 1, true);
-		IMAGEMANAGER->addFrameImage("booktag", "booktag.bmp", 100, 300, 2, 10, true);
+		IMAGEMANAGER->addFrameImage("booktag", "booktag.bmp", 100, 360, 2, 12, true);
 		IMAGEMANAGER->addImage("scrollbardown", "scrollbarplace.bmp", 14, 580, true);
 		IMAGEMANAGER->addImage("scrollbar", "scrollbar.bmp", 14, 68, true);
 		IMAGEMANAGER->addFrameImage("barrels", "barrels.bmp", 128, 96, 2, 1, true);
@@ -66,6 +67,7 @@ void mapTool::setup(void)
 		_sampleOpen = false;
 		_dragrc = RectMake(0, 0, 0, 0);
 		_page = 0;
+		_makeroom = 1;
 		_scroolmax = 600;
 		_currentscrool = 0;
 		_scroolpos = (_currentscrool / _scroolmax) * 512;
@@ -80,7 +82,7 @@ void mapTool::setup(void)
 	_cam->init(&_campt, _img);
 
 	//샘플북 태그 초기화
-	for (int y = 40, i = 0; i < 5; ++i, y += 50)
+	for (int y = 40, i = 0; i < 6; ++i, y += 50)
 	{
 		_tagbutton[i].onmouse = _tagbutton[i].select = false;
 		_tagbutton[i].rc = RectMake(_cam->getRC().right - IMAGEMANAGER->findImage("booktag")->getFrameWidth() - _book->getWidth() + 10, _cam->getRC().top + y,
@@ -117,6 +119,16 @@ void mapTool::setup(void)
 		}
 	}
 
+	//맵툴 옵션 초기화
+	for (int sy = 94, y = 0; y < 5; ++y, sy += 118)
+	{
+		if (y == 0) { _option[y].type = SAMIAUTO; _option[y].kind = T_ERASE; }
+		if (y == 1) { _option[y].type = SAMIAUTO; _option[y].kind = OB_ERASE; }
+		_option[y].select = false;
+		_option[y].rc = RectMake(_cam->getRC().right - 350, _cam->getRC().top + sy,
+			IMAGEMANAGER->findImage("mapoption")->getFrameWidth(), IMAGEMANAGER->findImage("mapoption")->getFrameHeight());
+	}
+
 	//타일 초기화
 	for (int y = 0; y < TILEY; ++y)
 	{
@@ -137,6 +149,12 @@ void mapTool::setup(void)
 
 void mapTool::keycontrol(void)
 {
+	//지금 그리는타입이 자동일떄 스타트 위치 잡아주자
+	if (_nowdraw == AUTO)
+	{
+		_start.x = _mouse.x;
+		_start.y = _mouse.y;
+	}
 	//카메라 이동
 	{
 		if (KEYMANAGER->isStayKeyDown('W') && _campt.y > (WINSIZEY / 2))
@@ -202,7 +220,7 @@ void mapTool::keycontrol(void)
 	//타일에 그림그리기
 	{
 		//샘플북 포커싱 해주기
-		for (int i = 0; i < 5; ++i)
+		for (int i = 0; i < 6; ++i)
 		{
 			if (PtInRect(&_tagbutton[i].rc, _mouse))
 			{
@@ -329,11 +347,31 @@ void mapTool::tileselect(void)
 			}
 		}
 	}
+	//옵션 페이지
+	if (_page == 5)
+	{
+		int sy = 0;
+		for (int y = 0; y < 5; ++y)
+		{
+			if (PtInRect(&_option[y].rc, _mouse))
+			{
+				_option[y].select = true;
+				_nowselecct = _option[y].kind;
+				_nowdraw = _option[y].type;
+				sy = y;
+			}
+		}
+		for (int y = 0; y < 5; ++y)
+		{
+			if (sy == y) { continue; }
+			_option[y].select = false;
+		}
+	}
 }
 
 void mapTool::pageselect(void)
 {
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		if (PtInRect(&_tagbutton[i].rc, _mouse))
 		{
@@ -341,7 +379,7 @@ void mapTool::pageselect(void)
 			_tagbutton[i].select = true;
 		}
 	}
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		if (i != _page) { _tagbutton[i].select = false; }
 	}
@@ -444,7 +482,7 @@ void mapTool::tiledraw(void)
 					{
 						_tile[y][x].terrainX = (_nowselecct == S_WALL) ? 7 : 4;
 						_tile[y][x].terrainY = 0;
-						_tile[y][x].terrain = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].obj = BLANK;
 						continue;
 					}
@@ -601,10 +639,78 @@ void mapTool::tiledraw(void)
 				}
 			}
 		}
+		//바닥 지울때
+		if (_nowselecct == T_ERASE)
+		{
+			for (int y = startY; y < endY + 1; ++y)
+			{
+				for (int x = startX; x < endX + 1; ++x)
+				{
+					_tile[y][x].terrain = EMPTY;
+					_tile[y][x].terrainX = 5;
+					_tile[y][x].terrainY = 1;
+					_tile[y][x].pass = true;
+				}
+			}
+		}
+		//오브젝트 지울때
+		if (_nowselecct == OB_ERASE)
+		{
+			for (int y = startY; y < endY + 1; ++y)
+			{
+				for (int x = startX; x < endX + 1; ++x)
+				{
+					_tile[y][x].obj = NONE;
+					_tile[y][x].objframeX = 5;
+					_tile[y][x].objframeY = 1;
+					_tile[y][x].sponSequence = 0;
+					_tile[y][x].pass = true;
+				}
+			}
+		}
 	}
 	else if (_nowdraw == AUTO)
 	{
+		//시작방 만들떄
+		if (_nowselecct == START_ROOM)
+		{
+			bool escape = false;
+			//일단 범위 체크해서 그릴수 있는지 없는지 판단
+			for (int y = _start.y; y < _start.y + 25; ++y)
+			{
+				for (int x = _start.x; x < _start.x + 23; ++x)
+				{
+					if (_tile[y][x].roomnum != 0) { break; }
+				}
+				if (escape) { break; }
+			}
 
+			if (!escape)
+			{
+				for (int ty = 20, y = _start.y; y < _start.y + 25; ++y)
+				{
+					for (int tx = 20, x = _start.x; x < _start.x + 23; ++x)
+					{
+						_tile[y][x].roomnum = _makeroom;
+						//장판을 깐다
+						if (x > _start.x && x < _start.x + 22)
+						{
+							_tile[y][x].terrain = STON_FLOOR;
+							_tile[y][x].terrainX = tx;
+							_tile[y][x].terrainY = ty;
+							++tx;
+						}
+					}
+					if (ty > _start.y + 2 && ty < _start.y + 24) { ++ty; }
+				}
+				++_makeroom;
+			}
+		}
+		//상점방 만들때
+		if (_nowselecct == SHOP_ROOM)
+		{
+
+		}
 	}
 
 	_dragrc = RectMake(0, 0, 0, 0);
@@ -622,7 +728,7 @@ void mapTool::mousemove(void)
 void mapTool::bookup(void)
 {
 	//샘플북 버튼 위치 갱신
-	for (int y = 40, i = 0; i < 5; ++i, y += 50)
+	for (int y = 40, i = 0; i < 6; ++i, y += 50)
 	{
 		_tagbutton[i].rc = RectMake(_cam->getRC().right - IMAGEMANAGER->findImage("booktag")->getFrameWidth() - _book->getWidth() + 10, _cam->getRC().top + y,
 			IMAGEMANAGER->findImage("booktag")->getFrameWidth(), IMAGEMANAGER->findImage("booktag")->getFrameHeight());
@@ -644,6 +750,12 @@ void mapTool::bookup(void)
 			_enemysample[y][x].rc = RectMake(_cam->getRC().right - 350 + sx, _cam->getRC().top + sy,
 				IMAGEMANAGER->findImage("bigsamplecase")->getFrameWidth(), IMAGEMANAGER->findImage("bigsamplecase")->getFrameHeight());
 		}
+	}
+	//맵툴 옵션 위치 갱신
+	for (int sy = 94, y = 0; y < 5; ++y, sy += 118)
+	{
+		_option[y].rc = RectMake(_cam->getRC().right - 350, _cam->getRC().top + sy,
+			IMAGEMANAGER->findImage("mapoption")->getFrameWidth(), IMAGEMANAGER->findImage("mapoption")->getFrameHeight());
 	}
 	//스크롤바 갱신
 	_scroolpos = (_currentscrool / _scroolmax) * 512;
@@ -751,6 +863,15 @@ void mapTool::draw(void)
 				}
 			}
 		}
+		//옵션
+		if (_page == 5)
+		{
+			for (int y = 0; y < 5; ++y)
+			{
+				if (_option[y].select) { IMAGEMANAGER->findImage("mapoption")->frameRender(getBackDC(), _option[y].rc.left, _option[y].rc.top, 1, y); }
+				else { IMAGEMANAGER->findImage("mapoption")->frameRender(getBackDC(), _option[y].rc.left, _option[y].rc.top, 0, y); }
+			}
+		}
 
 		//샘플북 커버
 		IMAGEMANAGER->findImage("cover")->render(getBackDC(), _cam->getRC().right - _book->getWidth(), _cam->getRC().top);
@@ -758,7 +879,7 @@ void mapTool::draw(void)
 		IMAGEMANAGER->findImage("scrollbardown")->render(getBackDC(), _cam->getRC().right - 34, _cam->getRC().top + 94);
 		IMAGEMANAGER->findImage("scrollbar")->render(getBackDC(), _cam->getRC().right - 34, (_cam->getRC().top + 94) + _scroolpos);
 		//태그
-		for (int y = 1, i = 0; i < 5; ++i, y += 2)
+		for (int y = 1, i = 0; i < 6; ++i, y += 2)
 		{
 			if (_tagbutton[i].select)
 			{
@@ -776,20 +897,63 @@ void mapTool::draw(void)
 
 void mapTool::selectdraw(void)
 {
-	for (int y = 0; y < TILEY; ++y)
+	if (_nowdraw == SAMIAUTO)
 	{
-		for (int x = 0; x < TILEX; ++x)
+		for (int y = 0; y < TILEY; ++y)
 		{
-			if (!IntersectRect(&RectMake(0, 0, 0, 0), &_dragrc, &_tile[y][x].rc)) { continue; }
-			if (!_tile[y][x].pass || _tile[y][x].obj != NONE)
+			for (int x = 0; x < TILEX; ++x)
 			{
-				IMAGEMANAGER->findImage("no")->alphaRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top);
-				continue;
-			}
-			if (_tile[y][x].obj == NONE)
-			{
-				IMAGEMANAGER->findImage("ok")->alphaRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top);
+				if (!IntersectRect(&RectMake(0, 0, 0, 0), &_dragrc, &_tile[y][x].rc)) { continue; }
+				if (!_tile[y][x].pass || _tile[y][x].obj != NONE)
+				{
+					IMAGEMANAGER->findImage("no")->alphaRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top);
+					continue;
+				}
+				if (_tile[y][x].obj == NONE)
+				{
+					IMAGEMANAGER->findImage("ok")->alphaRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top);
+				}
 			}
 		}
+	}
+	if (_nowdraw == AUTO)
+	{
+		//시작방 그릴 영역 체크
+		if (_nowselecct == START_ROOM)
+		{
+			bool escape = false;
+			//일단 범위 체크해서 그릴수 있는지 없는지 판단
+			for (int y = _start.y; y < _start.y + 25; ++y)
+			{
+				for (int x = _start.x; x < _start.x + 23; ++x)
+				{
+					if (_tile[y][x].roomnum != 0) { break; }
+				}
+				if (escape) { break; }
+			}
+			//어 못그려
+			if (escape)
+			{
+				for (int y = _start.y; y < _start.y + 25; ++y)
+				{
+					for (int x = _start.x; x < _start.x + 23; ++x)
+					{
+						IMAGEMANAGER->findImage("no")->alphaRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top);
+					}
+				}
+			}
+			//어 그릴수 있어
+			else
+			{
+				for (int y = _start.y; y < _start.y + 25; ++y)
+				{
+					for (int x = _start.x; x < _start.x + 23; ++x)
+					{
+						IMAGEMANAGER->findImage("ok")->alphaRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top);
+					}
+				}
+			}
+		}
+		
 	}
 }

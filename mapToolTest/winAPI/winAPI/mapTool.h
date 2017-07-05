@@ -32,7 +32,15 @@ enum selecttilekind
 	K_BULLET,
 	B_BULLET,
 	R_SHOTGUN,
-	GUNUT
+	GUNUT,
+	START_ROOM,
+	SHOP_ROOM,
+	STON_ROOM,
+	WOOD_ROOM,
+	BOX_ROOM,
+	T_ERASE,
+	OB_ERASE,
+	R_ERASE
 };
 
 enum drawtype
@@ -60,7 +68,8 @@ private:
 	image* _alhpa;						//미니맵으로 사용할거 알파블랜더 테스트 이미지
 
 	tagTile _tile[TILEY][TILEX];		//타일
-	tagfakebutton _tagbutton[5];		//샘플북 태그
+	tagTile _startRoom[24][22];			//시작방 정보
+	tagfakebutton _tagbutton[6];		//샘플북 태그
 	drawtype _nowdraw;					//선택한 타일 드로우 방식
 	selecttilekind _nowselecct;			//현재 선택한 타일
 
@@ -70,9 +79,11 @@ private:
 	RECT _dragrc;						//드래그 영역 그려줄 렉트
 	tagbigsample _bigsample[5][2];		//샘플 이미지 그려줄 RC
 	tagbigsample _enemysample[2][2];	//적군 샘플 그려줄 RC
+	tagbigsample _option[5];			//맵툴 옵션 버튼
 	
 	bool _sampleOpen;					//타일선택창 열었는지 확인
 	int _page;							//지금 펼치고 있는 샘플북 페이지
+	int _makeroom;						//지금 만드는 방에 부여될 번호
 	float _scroolmax;					//스크롤바 최대치
 	float _currentscrool;				//스크롤바 수치
 	float _scroolpos;					//현재 스크롤바 위치

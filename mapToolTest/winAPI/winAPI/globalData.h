@@ -4,8 +4,8 @@
 #define TILESIZE_MINI 6
 #define TILESIZE_HARF (TILESIZE / 2)
 #define TILESIZE_MINI_HARF (TILESIZE_MINI / 2)
-#define TILEX 150
-#define TILEY 150
+#define TILEX 120
+#define TILEY 100
 #define TILEWIDTH (TILEX * TILESIZE)
 #define TILEWIDTH_MINI (TILEX * TILESIZE_MINI)
 #define TILEHEIGHT (TILEY * TILESIZE)
@@ -19,10 +19,18 @@ enum TERRAIN
 	CARPET
 };
 
+//enum WALL
+//{
+//	VOID_WALL,
+//	STON_WALL,
+//	BOOK_WALL
+//};
+
 enum OBJECT
 {
 	NONE,
 	BLANK,
+	DECO,
 	STON_WALL,
 	BOOK_WALL,
 	WOOD_BARREL,
@@ -33,15 +41,18 @@ enum OBJECT
 	BULLET_BANDANA,
 	SHOTGUN_RED,
 	GUN_NUT,
-	SHOP_MASTER
+	SHOP_MASTER,
+	TELEPOTER,
+	DOOR_WIDTH,
+	DOOR_LENGTH
 };
 
 struct tagTile
 {
 	TERRAIN terrain;
 	OBJECT obj;
-	RECT rc;
-	bool pass;
+	RECT rc, minirc;
+	bool pass, show;
 	int roomnum, sponSequence;
 	int terrainX, terrainY;
 	int objframeX, objframeY;

@@ -10,6 +10,7 @@ POINT _ptMouse;
 bool _leftButtonDown;
 bool _wheelUp;
 bool _wheelDown;
+int _TILEMINISIZE = 4;
 
 gameStudy _gs;
 

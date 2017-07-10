@@ -79,6 +79,7 @@ extern POINT		_ptMouse;	//마우스
 extern bool			_leftButtonDown;
 extern bool			_wheelUp;
 extern bool			_wheelDown;
+extern int			_TILEMINISIZE;
 
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.

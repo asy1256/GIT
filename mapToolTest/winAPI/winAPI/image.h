@@ -100,6 +100,7 @@ public:
 
 	//알파블랜더
 	void alphaRender(HDC hdc, int destX, int destY);
+	void alphaRender(HDC hdc, int destX, int destY, int sourX, int sourY, int sourWidth, int sourHeight);
 
 	//좌표 X
 	inline void setX(float x) {_imageInfo->x = x;}

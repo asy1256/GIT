@@ -571,3 +571,35 @@ void image::alphaRender(HDC hdc, int destX, int destY)
 		//bitblt DC간의 영역끼리 서로 고속복사를 해준다
 	}
 }
+
+void image::alphaRender(HDC hdc, int destX, int destY, int sourX, int sourY, int sourWidth, int sourHeight)
+{
+	BLENDFUNCTION bf;
+	bf.BlendOp = AC_SRC_OVER;
+	bf.BlendFlags = 0;
+	bf.SourceConstantAlpha = 130;
+	bf.AlphaFormat = 0;
+
+	if (_tran)
+	{
+		AlphaBlend(
+			hdc,					//복사할 장소의 DC
+			destX,					//복사될 좌표 시작점 x
+			destY,					//복사될 좌표 시작점 y
+			sourWidth,				//복사될 크기 width
+			sourHeight,				//복사될 크기 height
+			_imageInfo->hMemDC,		//복사대상 DC
+			sourX,					//복사 시작지점 x
+			sourY,					//복사 시작지점 y
+			sourWidth,				//복사될 영역지정한다 width
+			sourHeight,				//복사될 영역지정한다 height
+			bf						//알파값
+		);
+	}
+	else
+	{
+		BitBlt(hdc, destX, destY, _imageInfo->width, _imageInfo->height,
+			_imageInfo->hMemDC, 0, 0, SRCCOPY);
+		//bitblt DC간의 영역끼리 서로 고속복사를 해준다
+	}
+}

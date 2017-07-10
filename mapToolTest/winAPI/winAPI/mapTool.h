@@ -25,8 +25,8 @@ enum selecttilekind
 	CARPT_B_PIECE,
 	W_BARREL,
 	B_BARREL,
-	TELEPORTER,
-	DOOR,
+	O_TP,
+	O_DOOR,
 	L_TABLE,
 	W_TABLE,
 	K_BULLET,
@@ -62,6 +62,7 @@ class mapTool : public gameNode
 {
 private:
 	image* _img;						//카메라에서 사용할 이미지
+	image* _miniimg;					//미니맵그릴때 사용할 이미지
 	image* _sample;						//타일 샘플 이미지
 	image* _book;						//타일 선택창 이미지
 	image* _alhpa;						//미니맵으로 사용할거 알파블랜더 테스트 이미지
@@ -74,6 +75,8 @@ private:
 
 	POINT _campt, _mouse, _ptadd;		//카메라 이동에 의한 마우스 좌표동기화에 필요한 포인트 변수
 	POINT _start;						//드래그 영역 그릴때 처음 클릭한 좌표 저장하는 포인트 변수
+	POINT _minimappt;					//미니맵 드래그 해서 확인할용도
+	POINT _basept;
 	
 	RECT _dragrc;						//드래그 영역 그려줄 렉트
 	tagbigsample _bigsample[5][2];		//샘플 이미지 그려줄 RC
@@ -82,6 +85,7 @@ private:
 	tagbigsample _option[5];			//맵툴 옵션 버튼
 	
 	bool _sampleOpen;					//타일선택창 열었는지 확인
+	bool _mapOpen;						//미니맵 열었는지 확인
 	int _page;							//지금 펼치고 있는 샘플북 페이지
 	int _makeroom;						//지금 만드는 방에 부여될 번호
 	float _scroolmax;					//스크롤바 최대치
@@ -104,6 +108,7 @@ public:
 	virtual void mousemove(void);
 	virtual void bookup(void);
 	virtual void draw(void);
+	virtual void minidraw(void);
 	virtual void selectdraw(void);
 
 	mapTool();

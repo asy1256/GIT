@@ -37,6 +37,7 @@ void mapTool::render(void)
 {
 	draw();
 	_cam->render();
+	//GdiTransparentBlt(getMemDC(), WINSIZEX - TILEWIDTH / 20, 0, TILEWIDTH / 20, TILEHEIGHT / 20, getBackDC(), 0, 0, TILEWIDTH, TILEHEIGHT, RGB(0, 235, 143));
 }
 
 void mapTool::setup(void)
@@ -45,8 +46,11 @@ void mapTool::setup(void)
 	{
 		_sample = IMAGEMANAGER->addFrameImage("tile", "sampletile.bmp", 1280, 2560, 20, 40, true);
 		_img = IMAGEMANAGER->addImage("bimg", "backImage.bmp", TILEWIDTH, TILEHEIGHT);
+		_miniimg = IMAGEMANAGER->addImage("mimg", "backImage.bmp", 8 * TILEX, 8 * TILEY, true);
 		_book = IMAGEMANAGER->addImage("book", "samplebook.bmp", 400, 768, true);
 		_alhpa = IMAGEMANAGER->addImage("minimap", "minimap.bmp", 256, 256, true);
+		IMAGEMANAGER->addImage("minimapcase", "minimapcase.bmp", 838, 734, true);
+		IMAGEMANAGER->addImage("black", "blackImage.bmp", 8 * TILEX, 8 * TILEY);
 		IMAGEMANAGER->addImage("ok", "tileok.bmp", 64, 64, true);
 		IMAGEMANAGER->addImage("no", "tileno.bmp", 64, 64, true);
 		IMAGEMANAGER->addImage("cover", "bookcover.bmp", 400, 768, true);
@@ -64,8 +68,9 @@ void mapTool::setup(void)
 	//다양한 변수 초기화
 	{
 		_campt = PointMake(WINSIZEX / 2, WINSIZEY / 2);
-		_mouse = _ptadd = PointMake(0, 0);
+		_mouse = _ptadd = _basept = _minimappt = PointMake(0, 0);
 		_sampleOpen = false;
+		_mapOpen = false;
 		_dragrc = RectMake(0, 0, 0, 0);
 		_page = 0;
 		_makeroom = 1;
@@ -78,6 +83,8 @@ void mapTool::setup(void)
 
 	SetTextColor(getBackDC(), RGB(255, 255, 255));
 	SetBkMode(getBackDC(), TRANSPARENT);
+	HPEN pen = CreatePen(NULL, 1, RGB(255, 255, 255));
+	SelectObject(getBackDC(), pen);
 
 	_cam = new camera;
 	_cam->init(&_campt, _img);
@@ -98,7 +105,7 @@ void mapTool::setup(void)
 		{
 			if (y == 0) { _bigsample[y][x].type = SAMIAUTO; _bigsample[y][x].kind = (x == 0) ? S_WALL : W_WALL; }
 			if (y == 1) { _bigsample[y][x].type = SAMIAUTO; _bigsample[y][x].kind = (x == 0) ? CARPT_A : CARPT_B; }
-			if (y == 2) { _bigsample[y][x].type = AUTO; _bigsample[y][x].kind = (x == 0) ? TELEPORTER : DOOR; }
+			if (y == 2) { _bigsample[y][x].type = AUTO; _bigsample[y][x].kind = (x == 0) ? O_TP : O_DOOR; }
 			if (y == 3) { _bigsample[y][x].type = STICK; _bigsample[y][x].kind = (x == 0) ? L_TABLE : W_TABLE; }
 			if (y == 4) { _bigsample[y][x].type = STICK; _bigsample[y][x].kind = (x == 0) ? W_BARREL : B_BARREL; }
 			_bigsample[y][x].select = false;
@@ -138,6 +145,7 @@ void mapTool::setup(void)
 	{
 		if (y == 0) { _option[y].type = SAMIAUTO; _option[y].kind = T_ERASE; }
 		if (y == 1) { _option[y].type = SAMIAUTO; _option[y].kind = OB_ERASE; }
+		if (y == 2) { _option[y].type = AUTO; _option[y].kind = R_ERASE; }
 		_option[y].select = false;
 		_option[y].rc = RectMake(_cam->getRC().right - 350, _cam->getRC().top + sy,
 			IMAGEMANAGER->findImage("mapoption")->getFrameWidth(), IMAGEMANAGER->findImage("mapoption")->getFrameHeight());
@@ -151,12 +159,13 @@ void mapTool::setup(void)
 			_tile[y][x].obj = NONE;
 			_tile[y][x].pass = true;
 			_tile[y][x].terrain = EMPTY;
-			_tile[y][x].terrainX = 3;
-			_tile[y][x].terrainY = RND->getInt(2);
+			_tile[y][x].terrainX = 5;
+			_tile[y][x].terrainY = 1;
 			_tile[y][x].objframeX = 5;
 			_tile[y][x].objframeY = 1;
 			_tile[y][x].roomnum = _tile[y][x].sponSequence = 0;
 			_tile[y][x].rc = RectMake(x * TILESIZE, y * TILESIZE, TILESIZE, TILESIZE);
+			_tile[y][x].minirc = RectMake(x * _TILEMINISIZE, y * _TILEMINISIZE, _TILEMINISIZE, _TILEMINISIZE);
 		}
 	}
 }
@@ -192,6 +201,11 @@ void mapTool::keycontrol(void)
 			_ptadd.x += 12;
 		}
 	}
+	//미니맵
+	if (KEYMANAGER->isOnceKeyDown('M'))
+	{
+		_mapOpen = (_mapOpen == false) ? true : false;
+	}
 	//마우스 휠 액션
 	if (_sampleOpen)
 	{
@@ -211,6 +225,29 @@ void mapTool::keycontrol(void)
 				if (_currentscrool >= _scroolmax) { _currentscrool = _scroolmax; }
 			}
 		}
+		_wheelUp = false;
+		_wheelDown = false;
+	}
+	else if (_mapOpen)
+	{
+		if (_wheelUp)
+		{
+			++_TILEMINISIZE;
+			if (_TILEMINISIZE > 8) { _TILEMINISIZE = 8; }
+		}
+		if (_wheelDown)
+		{
+			--_TILEMINISIZE;
+			if (_TILEMINISIZE < 4) { _TILEMINISIZE = 4; }
+		}
+		for (int y = 0; y < TILEY; ++y)
+		{
+			for (int x = 0; x < TILEX; ++x)
+			{
+				_tile[y][x].minirc = RectMake(x * _TILEMINISIZE, y * _TILEMINISIZE, _TILEMINISIZE, _TILEMINISIZE);
+			}
+		}
+
 		_wheelUp = false;
 		_wheelDown = false;
 	}
@@ -250,6 +287,7 @@ void mapTool::keycontrol(void)
 		if (KEYMANAGER->isOnceKeyDown(VK_LBUTTON)) //한번 클릭
 		{
 			if (_sampleOpen) { pageselect(); tileselect(); }
+			else if (_mapOpen) { _start.x = _mouse.x; _start.y = _mouse.y; }
 			else
 			{
 				if (_nowdraw == SAMIAUTO) //반자동 그리기 렉트시작점
@@ -263,6 +301,17 @@ void mapTool::keycontrol(void)
 		else if (KEYMANAGER->isStayKeyDown(VK_LBUTTON)) //원하는 만큼의 구역 지정
 		{
 			if (_sampleOpen) {}
+			else if (_mapOpen)
+			{
+				int width = (_mouse.x < _start.x) ? _start.x - _mouse.x : _mouse.x - _start.x;
+				int height = (_mouse.y < _start.y) ? _start.y - _mouse.y : _mouse.y - _start.y;
+				(_mouse.x < _start.x) ? _minimappt.x = _basept.x + width : _minimappt.x = _basept.x - width;
+				(_mouse.y < _start.y) ? _minimappt.y = _basept.y + height : _minimappt.y = _basept.y - height;
+				if (_minimappt.x < 0) { _minimappt.x = 0; }
+				if (_minimappt.x > IMAGEMANAGER->findImage("mimg")->getWidth() - 800) { _minimappt.x = IMAGEMANAGER->findImage("mimg")->getWidth() - 800; }
+				if (_minimappt.y < 0) { _minimappt.y = 0; }
+				if (_minimappt.y > IMAGEMANAGER->findImage("mimg")->getHeight() - 600) { _minimappt.y = IMAGEMANAGER->findImage("mimg")->getHeight() - 600; }
+			}
 			else
 			{
 				if (_nowdraw == STICK) { tiledraw(); }
@@ -300,6 +349,7 @@ void mapTool::keycontrol(void)
 		{
 			//if (_nowtag != SAMIAUTO) return;
 			if (_sampleOpen) {}
+			else if (_mapOpen) { _basept = _minimappt; }
 			else { if (_nowdraw == SAMIAUTO) { tiledraw(); } }
 		}
 	}
@@ -775,6 +825,7 @@ void mapTool::tiledraw(void)
 					}
 				}
 			}
+			++_makeroom;
 		}
 		//바닥 지울때
 		if (_nowselecct == T_ERASE)
@@ -808,6 +859,322 @@ void mapTool::tiledraw(void)
 	}
 	else if (_nowdraw == AUTO)
 	{
+		//텔레포터 만들때
+		if (_nowselecct == O_TP)
+		{
+			for (int ty = 6, y = _start.y; y < _start.y + 2; ++y, ++ty)
+			{
+				for (int tx = 0, x = _start.x; x < _start.x + 2; ++x, ++tx)
+				{
+					if (y == _start.y && x == _start.x) { _tile[y][x].obj = TELEPOTER; }
+					else { _tile[y][x].obj = BLANK; }
+					_tile[y][x].objframeX = tx;
+					_tile[y][x].objframeY = ty;
+				}
+			}
+		}
+		//문 설치할때
+		if (_nowselecct == O_DOOR)
+		{
+			bool makeok = true;
+			int sy, sx, ey, ex;
+			sy = ey = _start.y; sx = ex = _start.x;
+			if (_tile[sy - 1][sx].roomnum == 0 || _tile[sy + 2][sx].roomnum == 0) //위또는 아래로 만들자
+			{
+				if (_tile[sy - 1][sx].roomnum == 0)
+				{
+					while (_tile[sy - 1][sx].roomnum == 0) { if (sy - 1 == 0) { makeok = false; break; } --sy; }
+					sy -= 2;
+					++ey;
+				}
+				else if (_tile[sy + 2][sx].roomnum == 0)
+				{
+					while (_tile[ey + 2][sx].roomnum == 0) { if (ey + 2 == TILEY) { makeok = false; break; } ++ey; }
+					ey += 3;
+				}
+				if (!makeok) { return; }
+				ex += 4;
+
+				for (int y = sy; y < ey; ++y)
+				{
+					for (int x = sx; x < ex; ++x)
+					{
+						if (y == sy && x == sx)//왼쪽위
+						{
+							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 9 : 6;
+							_tile[y][x].objframeY = 0;
+							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							_tile[y][x].pass = true;
+							continue;
+						}
+						if (y == sy && x == ex - 1)//오른쪽위
+						{
+							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 7 : 4;
+							_tile[y][x].objframeY = 0;
+							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							_tile[y][x].pass = true;
+							continue;
+						}
+						if (y == ey - 1 && x == sx)//왼쪽아래
+						{
+							if (_tile[y][x].obj == STON_WALL)
+							{
+								_tile[y][x].objframeX = 9;
+								_tile[y][x].objframeY = 2;
+								_tile[y][x].obj = STON_WALL;
+								_tile[y][x].pass = false;
+							}
+							else
+							{
+								_tile[y][x].objframeX = 6;
+								_tile[y][x].objframeY = 2;
+								_tile[y][x].obj = BOOK_WALL;
+								_tile[y][x].pass = false;
+								_tile[y + 1][x].objframeX = 9;
+								_tile[y + 1][x].objframeY = 3;
+								_tile[y + 1][x].obj = BOOK_WALL;
+								_tile[y + 1][x].pass = false;
+								_tile[y + 2][x].objframeX = 9;
+								_tile[y + 2][x].objframeY = 4;
+								_tile[y + 2][x].obj = BOOK_WALL;
+								_tile[y + 2][x].pass = false;
+							}
+							continue;
+						}
+						if (y == ey - 1 && x == ex - 1)//오른쪽아래
+						{
+							if (_tile[y][x].obj == STON_WALL)
+							{
+								_tile[y][x].objframeX = 7;
+								_tile[y][x].objframeY = 2;
+								_tile[y][x].obj = STON_WALL;
+								_tile[y][x].pass = false;
+							}
+							else
+							{
+								_tile[y][x].objframeX = 4;
+								_tile[y][x].objframeY = 2;
+								_tile[y][x].obj = BOOK_WALL;
+								_tile[y][x].pass = false;
+								_tile[y + 1][x].objframeX = 5;
+								_tile[y + 1][x].objframeY = 3;
+								_tile[y + 1][x].obj = BOOK_WALL;
+								_tile[y + 1][x].pass = false;
+								_tile[y + 2][x].objframeX = 5;
+								_tile[y + 2][x].objframeY = 4;
+								_tile[y + 2][x].obj = BOOK_WALL;
+								_tile[y + 2][x].pass = false;
+							}
+							continue;
+						}
+						if (y == sy) //위
+						{
+							_tile[y][x].terrainX = 3;
+							_tile[y][x].terrainY = (_tile[y][x].obj == STON_WALL) ? RND->getInt(2) : 2;
+							_tile[y][x].terrain = (_tile[y][x].obj == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
+							_tile[y][x].obj = NONE;
+							_tile[y][x].pass = true;
+							_tile[y + 1][x].terrainX = 3;
+							_tile[y + 1][x].terrainY = RND->getInt(2);;
+							_tile[y + 1][x].terrain = STON_FLOOR;
+							_tile[y + 1][x].objframeX = (x == sx + 1) ? 7 : 8;
+							_tile[y + 1][x].objframeY = 5;
+							_tile[y + 1][x].obj = (x == sx + 1) ? DOOR_LENGTH : BLANK;
+							_tile[y + 1][x].pass = true;
+							_tile[y + 2][x].terrainX = 3;
+							_tile[y + 2][x].terrainY = RND->getInt(2);;
+							_tile[y + 2][x].terrain = STON_FLOOR;
+							_tile[y + 2][x].objframeX = (x == sx + 1) ? 7 : 8;
+							_tile[y + 2][x].objframeY = 6;
+							_tile[y + 2][x].obj = BLANK;
+							_tile[y + 2][x].pass = true;
+						}
+						else if (y == ey - 1) //아래
+						{
+							_tile[y][x].terrainX = 3;
+							_tile[y][x].terrainY = RND->getInt(2);;
+							_tile[y][x].terrain = STON_FLOOR;
+							_tile[y][x].objframeX = (x == sx + 1) ? 7 : 8;
+							_tile[y][x].objframeY = 5;
+							_tile[y][x].obj = (x == sx + 1) ? DOOR_LENGTH : BLANK;
+							_tile[y][x].pass = true;
+							_tile[y + 1][x].terrainX = 3;
+							_tile[y + 1][x].terrainY = RND->getInt(2);;
+							_tile[y + 1][x].terrain = STON_FLOOR;
+							_tile[y + 1][x].objframeX = (x == sx + 1) ? 7 : 8;
+							_tile[y + 1][x].objframeY = 6;
+							_tile[y + 1][x].obj = BLANK;
+							_tile[y + 1][x].pass = true;
+							_tile[y + 2][x].terrainX = 3;
+							_tile[y + 2][x].terrainY = (_tile[y + 2][x].obj == STON_WALL) ? RND->getInt(2) : 2;
+							_tile[y + 2][x].terrain = (_tile[y + 2][x].obj == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
+							_tile[y + 2][x].obj = NONE;
+							_tile[y + 2][x].pass = true;
+						}
+						else if (x == sx)//왼쪽
+						{
+							_tile[y][x].objframeX = (_tile[ey - 1][ex - 1].obj == STON_WALL) ? 9 : 6;
+							_tile[y][x].objframeY = 1;
+							_tile[y][x].obj = (_tile[ey - 1][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							_tile[y][x].pass = false;
+						}
+						else if (x == ex - 1)//오른쪽
+						{
+							_tile[y][x].objframeX = (_tile[ey - 1][ex - 1].obj == STON_WALL) ? 7 : 4;
+							_tile[y][x].objframeY = 1;
+							_tile[y][x].obj = (_tile[ey - 1][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							_tile[y][x].pass = false;
+						}
+						else
+						{
+							_tile[y][x].terrainX = 3;
+							_tile[y][x].terrainY = RND->getInt(2);;
+							_tile[y][x].terrain = STON_FLOOR;
+							_tile[y][x].pass = true;
+						}
+					}
+				}
+
+			}
+			if (_tile[sy][sx - 1].roomnum == 0 || _tile[sy][sx + 1].roomnum == 0) //왼쪽이나 오른쪽으로 만들자
+			{
+				if (_tile[sy][sx - 1].roomnum == 0)
+				{
+					while (_tile[sy][sx - 1].roomnum == 0) { if (sx - 1 == 0) { makeok = false; break; } --sx; }
+					sx -= 1;
+					++ex;
+				}
+				else if (_tile[sy][sx + 1].roomnum == 0)
+				{
+
+				}
+				ey += 5;
+
+
+				for (int y = sy; y < ey; ++y)
+				{
+					for (int x = sx; x < ex; ++x)
+					{
+						if (y == sy && x == sx)//왼쪽위
+						{
+							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 7 : 4;
+							_tile[y][x].objframeY = 2;
+							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							continue;
+						}
+						if (y == sy && x == ex - 1)//오른쪽위
+						{
+							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 9 : 6;
+							_tile[y][x].objframeY = 2;
+							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							continue;
+						}
+						if (y == ey - 1 && x == sx)//왼쪽아래
+						{
+							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 7 : 4;
+							_tile[y][x].objframeY = 0;
+							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							continue;
+						}
+						if (y == ey - 1 && x == ex - 1)//오른쪽아래
+						{
+							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 9 : 6;
+							_tile[y][x].objframeY = 0;
+							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							continue;
+						}
+						if (y == sy)//위
+						{
+							_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 8 : 5;
+							_tile[y][x].objframeY = 2;
+							_tile[y][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							_tile[y][x].pass = false;
+						}
+						else if (y == sy + 1 && (x == sx + 1 || x == ex - 2))//문짝
+						{
+							_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 10 : 17;
+							_tile[y][x].objframeY = 4;
+							_tile[y][x].obj = BLANK;
+							_tile[y + 1][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 10 : 17;
+							_tile[y + 1][x].objframeY = 5;
+							_tile[y + 1][x].obj = BLANK;
+							_tile[y + 2][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 10 : 17;
+							_tile[y + 2][x].objframeY = 6;
+							_tile[y + 2][x].obj = DOOR_WIDTH;
+						}
+						else if (y == sy + 1)//윗 벽돌
+						{
+							if (x == sx)
+							{
+								_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 4 : 3;
+								_tile[y][x].objframeY = 3;
+								_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].pass = false;
+							}
+							else
+							{
+								_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 4 : 3;
+								_tile[y][x].objframeY = 3;
+								_tile[y][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].pass = false;
+							}
+						}
+						else if (y == sy + 2)//아랫 벽돌
+						{
+							if (x == sx)
+							{
+								_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 4 : 3;
+								_tile[y][x].objframeY = 4;
+								_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].pass = false;
+							}
+							else
+							{
+								_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 4 : 3;
+								_tile[y][x].objframeY = 4;
+								_tile[y][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].pass = false;
+							}
+						}
+						else if (y == ey - 1)//아래
+						{
+							_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 8 : 5;
+							_tile[y][x].objframeY = 0;
+							_tile[y][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							_tile[y][x].pass = true;
+							_tile[y + 1][x].objframeX = 5;
+							_tile[y + 1][x].objframeY = 1;
+							_tile[y + 1][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+							_tile[y + 1][x].pass = false;
+						}
+						else if (x == sx)//왼쪽
+						{
+							_tile[y][x].terrainX = 3;
+							_tile[y][x].terrainY = (_tile[y][x].obj == STON_WALL) ? RND->getInt(2) : 2;
+							_tile[y][x].terrain = (_tile[y][x].obj == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
+							_tile[y][x].obj = NONE;
+							_tile[y][x].pass = true;
+						}
+						else if (x == ex - 1)//오른쪽
+						{
+							_tile[y][x].terrainX = 3;
+							_tile[y][x].terrainY = (_tile[y][x].obj == STON_WALL) ? RND->getInt(2) : 2;
+							_tile[y][x].terrain = (_tile[y][x].obj == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
+							_tile[y][x].obj = NONE;
+							_tile[y][x].pass = true;
+						}
+						else
+						{
+							_tile[y][x].terrainX = 3;
+							_tile[y][x].terrainY = RND->getInt(2);;
+							_tile[y][x].terrain = STON_FLOOR;
+							_tile[y][x].pass = true;
+						}
+					}
+				}
+			}
+			if (_tile[sy][sx + 1].obj == NONE) {} //오른쪽으로 만들자
+		}
 		//시작방 만들떄
 		if (_nowselecct == START_ROOM)
 		{
@@ -1040,96 +1407,96 @@ void mapTool::tiledraw(void)
 					int sx = _start.x;
 					//진열장
 					{
-						_tile[sy + 1][sx + 5].obj = BLANK;
+						_tile[sy + 1][sx + 5].obj = DECO;
 						_tile[sy + 1][sx + 5].objframeX = 10;
 						_tile[sy + 1][sx + 5].objframeY = 0;
-						_tile[sy + 2][sx + 5].obj = BLANK;
+						_tile[sy + 2][sx + 5].obj = DECO;
 						_tile[sy + 2][sx + 5].objframeX = 10;
 						_tile[sy + 2][sx + 5].objframeY = 1;
-						_tile[sy + 3][sx + 5].obj = BLANK;
+						_tile[sy + 3][sx + 5].obj = DECO;
 						_tile[sy + 3][sx + 5].objframeX = 10;
 						_tile[sy + 3][sx + 5].objframeY = 2;
-						_tile[sy + 4][sx + 5].obj = BLANK;
+						_tile[sy + 4][sx + 5].obj = DECO;
 						_tile[sy + 4][sx + 5].objframeX = 10;
 						_tile[sy + 4][sx + 5].objframeY = 3;
 						//진열장 가운데
-						_tile[sy + 1][sx + 6].obj = BLANK;
+						_tile[sy + 1][sx + 6].obj = DECO;
 						_tile[sy + 1][sx + 6].objframeX = 11;
 						_tile[sy + 1][sx + 6].objframeY = 0;
-						_tile[sy + 2][sx + 6].obj = BLANK;
+						_tile[sy + 2][sx + 6].obj = DECO;
 						_tile[sy + 2][sx + 6].objframeX = 11;
 						_tile[sy + 2][sx + 6].objframeY = 1;
-						_tile[sy + 3][sx + 6].obj = BLANK;
+						_tile[sy + 3][sx + 6].obj = DECO;
 						_tile[sy + 3][sx + 6].objframeX = 11;
 						_tile[sy + 3][sx + 6].objframeY = 2;
 						//진열장 오른쪽
-						_tile[sy + 1][sx + 7].obj = BLANK;
+						_tile[sy + 1][sx + 7].obj = DECO;
 						_tile[sy + 1][sx + 7].objframeX = 12;
 						_tile[sy + 1][sx + 7].objframeY = 0;
-						_tile[sy + 2][sx + 7].obj = BLANK;
+						_tile[sy + 2][sx + 7].obj = DECO;
 						_tile[sy + 2][sx + 7].objframeX = 12;
 						_tile[sy + 2][sx + 7].objframeY = 1;
-						_tile[sy + 3][sx + 7].obj = BLANK;
+						_tile[sy + 3][sx + 7].obj = DECO;
 						_tile[sy + 3][sx + 7].objframeX = 12;
 						_tile[sy + 3][sx + 7].objframeY = 2;
 					}
 					//보따리
 					{
-						_tile[sy + 4][sx + 1].obj = BLANK;
+						_tile[sy + 4][sx + 1].obj = DECO;
 						_tile[sy + 4][sx + 1].objframeX = 5;
 						_tile[sy + 4][sx + 1].objframeY = 5;
-						_tile[sy + 3][sx + 4].obj = BLANK;
+						_tile[sy + 3][sx + 4].obj = DECO;
 						_tile[sy + 3][sx + 4].objframeX = 5;
 						_tile[sy + 3][sx + 4].objframeY = 5;
 					}
 					//상자
 					{
-						_tile[sy + 5][sx + 1].obj = BLANK;
+						_tile[sy + 5][sx + 1].obj = DECO;
 						_tile[sy + 5][sx + 1].objframeX = 16;
 						_tile[sy + 5][sx + 1].objframeY = 0;
-						_tile[sy + 5][sx + 2].obj = BLANK;
+						_tile[sy + 5][sx + 2].obj = DECO;
 						_tile[sy + 5][sx + 2].objframeX = 17;
 						_tile[sy + 5][sx + 2].objframeY = 0;
 						//더블상자
-						_tile[sy + 3][sx + 2].obj = BLANK;
+						_tile[sy + 3][sx + 2].obj = DECO;
 						_tile[sy + 3][sx + 2].objframeX = 16;
 						_tile[sy + 3][sx + 2].objframeY = 1;
-						_tile[sy + 4][sx + 2].obj = BLANK;
+						_tile[sy + 4][sx + 2].obj = DECO;
 						_tile[sy + 4][sx + 2].objframeX = 16;
 						_tile[sy + 4][sx + 2].objframeY = 2;
-						_tile[sy + 3][sx + 3].obj = BLANK;
+						_tile[sy + 3][sx + 3].obj = DECO;
 						_tile[sy + 3][sx + 3].objframeX = 17;
 						_tile[sy + 3][sx + 3].objframeY = 1;
-						_tile[sy + 4][sx + 3].obj = BLANK;
+						_tile[sy + 4][sx + 3].obj = DECO;
 						_tile[sy + 4][sx + 3].objframeX = 17;
 						_tile[sy + 4][sx + 3].objframeY = 2;
 					}
 					//총바구니
 					{
-						_tile[sy + 2][sx + 8].obj = BLANK;
+						_tile[sy + 2][sx + 8].obj = DECO;
 						_tile[sy + 2][sx + 8].objframeX = 18;
 						_tile[sy + 2][sx + 8].objframeY = 0;
-						_tile[sy + 3][sx + 8].obj = BLANK;
+						_tile[sy + 3][sx + 8].obj = DECO;
 						_tile[sy + 3][sx + 8].objframeX = 18;
 						_tile[sy + 3][sx + 8].objframeY = 1;
 					}
 					//가면
 					{
-						_tile[sy + 1][sx + 1].obj = BLANK;
+						_tile[sy + 1][sx + 1].obj = DECO;
 						_tile[sy + 1][sx + 1].objframeX = 19;
 						_tile[sy + 1][sx + 1].objframeY = 0;
-						_tile[sy + 2][sx + 1].obj = BLANK;
+						_tile[sy + 2][sx + 1].obj = DECO;
 						_tile[sy + 2][sx + 1].objframeX = 19;
 						_tile[sy + 2][sx + 1].objframeY = 1;
 					}
 					//탁자
 					{
 						//가로
-						for (int oy = 7, y = _start.y + 8; y < _start.y + 12; ++y, ++oy)
+						for (int oy = 7, y = _start.y + 8; y < _start.y + 11; ++y, ++oy)
 						{
 							for (int ox = 7, x = _start.x + 1; x < _start.x + 14; ++x, ++ox)
 							{
-								_tile[y][x].obj = BLANK;
+								_tile[y][x].obj = DECO;
 								if (y == _start.y + 8 && x == _start.x + 7) { _tile[y][x].obj = SHOP_MASTER; }
 								_tile[y][x].objframeX = ox;
 								_tile[y][x].objframeY = oy;
@@ -1141,7 +1508,7 @@ void mapTool::tiledraw(void)
 						{
 							for (int ox = 18, x = _start.x + 12; x < _start.x + 14; ++x, ++ox)
 							{
-								_tile[y][x].obj = BLANK;
+								_tile[y][x].obj = DECO;
 								_tile[y][x].objframeX = ox;
 								_tile[y][x].objframeY = oy;
 								_tile[y][x].pass = false;
@@ -1151,6 +1518,33 @@ void mapTool::tiledraw(void)
 				}
 				++_makeroom;
 			}
+		}
+		//방 지울떄
+		if (_nowselecct == R_ERASE)
+		{
+			if (_tile[_start.y][_start.x].roomnum == 0) { return; }
+			int sy, sx, ey, ex;
+			sy = ey = _start.y;
+			sx = ex = _start.x;
+			while (_tile[sy][_start.x].roomnum != 0) { --sy; }
+			while (_tile[ey][_start.x].roomnum != 0) { ++ey; }
+			while (_tile[_start.y][sx].roomnum != 0) { --sx; }
+			while (_tile[_start.y][ex].roomnum != 0) { ++ex; }
+			for (int y = sy; y < ey; ++y)
+			{
+				for (int x = sx; x < ex; ++x)
+				{
+					_tile[y][x].pass = true;
+					_tile[y][x].obj = NONE;
+					_tile[y][x].terrain = EMPTY;
+					_tile[y][x].terrainX = 5;
+					_tile[y][x].terrainY = 1;
+					_tile[y][x].objframeX = 5;
+					_tile[y][x].objframeY = 1;
+					_tile[y][x].roomnum = _tile[y][x].sponSequence = 0;
+				}
+			}
+			--_makeroom;
 		}
 	}
 
@@ -1279,6 +1673,7 @@ void mapTool::draw(void)
 	//드래그한 부분 그려주자
 	selectdraw();
 	//미니맵
+	if (_mapOpen) { minidraw(); }
 	_alhpa->alphaRender(getBackDC(), _cam->getRC().right - _alhpa->getWidth(), _cam->getRC().top);
 
 	//샘플북
@@ -1357,16 +1752,51 @@ void mapTool::draw(void)
 	}
 }
 
+void mapTool::minidraw(void)
+{
+	HBRUSH oldbrush = CreateSolidBrush(RGB(0, 0, 0));
+	HBRUSH bluebrush = CreateSolidBrush(RGB(0, 0, 255));
+	HBRUSH withebrush = CreateSolidBrush(RGB(255, 255, 255));
+	IMAGEMANAGER->findImage("black")->render(_miniimg->getMemDC());
+	for (int y = 0; y < TILEY; ++y)
+	{
+		for (int x = 0; x < TILEX; ++x)
+		{
+			if (_tile[y][x].terrain != EMPTY)
+			{
+				FillRect(_miniimg->getMemDC(), &_tile[y][x].minirc, bluebrush);
+			}
+			if (_tile[y][x].obj == STON_WALL || _tile[y][x].obj == BOOK_WALL)
+			{
+				FillRect(_miniimg->getMemDC(), &_tile[y][x].minirc, withebrush);
+			}
+		}
+	}
+	RECT mmaprc = RectMake(_cam->getRC().left + 100, _cam->getRC().top + 80, 800, 600);
+
+	POINT mtemp;
+	mtemp.x = (_cam->getRC().left + _campt.x / (TILESIZE / _TILEMINISIZE)) - _minimappt.x + 100;
+	mtemp.y = (_cam->getRC().top + _campt.y / (TILESIZE / _TILEMINISIZE)) - _minimappt.y + 80;
+	RECT ftemp = RectMakeCenter(mtemp.x, mtemp.y, _TILEMINISIZE * 16, _TILEMINISIZE * 12);
+	
+	IMAGEMANAGER->findImage("minimapcase")->alphaRender(getBackDC(), mmaprc.left - 17, mmaprc.top - 60);
+	_miniimg->alphaRender(getBackDC(), mmaprc.left, mmaprc.top, _minimappt.x, _minimappt.y, 800, 600);
+	LineMake(getBackDC(), ftemp.left, ftemp.top, ftemp.right, ftemp.top);
+	LineMake(getBackDC(), ftemp.right, ftemp.top, ftemp.right, ftemp.bottom);
+	LineMake(getBackDC(), ftemp.right, ftemp.bottom, ftemp.left, ftemp.bottom);
+	LineMake(getBackDC(), ftemp.left, ftemp.bottom, ftemp.left, ftemp.top);
+}
+
 void mapTool::selectdraw(void)
 {
 	if (_nowdraw == SAMIAUTO)
 	{
-		for (int y = 0; y < TILEY; ++y)
+		for (int y = _dragrc.top / TILESIZE; y < _dragrc.bottom / TILESIZE + 1; ++y)
 		{
-			for (int x = 0; x < TILEX; ++x)
+			for (int x = _dragrc.left / TILESIZE; x < _dragrc.right / TILESIZE + 1; ++x)
 			{
-				if (!IntersectRect(&RectMake(0, 0, 0, 0), &_dragrc, &_tile[y][x].rc)) { continue; }
-				if (!_tile[y][x].pass || _tile[y][x].obj != NONE)
+				if (!IntersectRect(&RectMake(0, 0, 0, 0), &_cam->getRC(), &_tile[y][x].rc)) { continue; }
+				if (_tile[y][x].obj != NONE)
 				{
 					IMAGEMANAGER->findImage("no")->alphaRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top);
 					continue;
@@ -1387,7 +1817,7 @@ void mapTool::selectdraw(void)
 			//일단 범위 체크해서 그릴수 있는지 없는지 판단
 			for (int y = _start.y; y < _start.y + 25; ++y)
 			{
-				for (int x = _start.x; x < _start.x + 23; ++x)
+				for (int x = _start.x; x < _start.x + 22; ++x)
 				{
 					if (_tile[y][x].roomnum != 0) { escape = true; break; }
 				}

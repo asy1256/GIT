@@ -37,7 +37,6 @@ void mapTool::render(void)
 {
 	draw();
 	_cam->render();
-	//GdiTransparentBlt(getMemDC(), WINSIZEX - TILEWIDTH / 20, 0, TILEWIDTH / 20, TILEHEIGHT / 20, getBackDC(), 0, 0, TILEWIDTH, TILEHEIGHT, RGB(0, 235, 143));
 }
 
 void mapTool::setup(void)
@@ -158,11 +157,10 @@ void mapTool::setup(void)
 		{
 			_tile[y][x].obj = NONE;
 			_tile[y][x].pass = true;
+			_tile[y][x].wall = VOID_WALL;
 			_tile[y][x].terrain = EMPTY;
-			_tile[y][x].terrainX = 5;
-			_tile[y][x].terrainY = 1;
-			_tile[y][x].objframeX = 5;
-			_tile[y][x].objframeY = 1;
+			_tile[y][x].terrainX = _tile[y][x].objframeX = _tile[y][x].wallX = 5;
+			_tile[y][x].terrainY = _tile[y][x].objframeY = _tile[y][x].wallY = 1;
 			_tile[y][x].roomnum = _tile[y][x].sponSequence = 0;
 			_tile[y][x].rc = RectMake(x * TILESIZE, y * TILESIZE, TILESIZE, TILESIZE);
 			_tile[y][x].minirc = RectMake(x * _TILEMINISIZE, y * _TILEMINISIZE, _TILEMINISIZE, _TILEMINISIZE);
@@ -446,6 +444,28 @@ void mapTool::tileselect(void)
 		{
 			if (PtInRect(&_option[y].rc, _mouse))
 			{
+				if (y == 3)
+				{
+					HANDLE file;
+					DWORD write;
+
+					file = CreateFile("stageOne", GENERIC_WRITE, 0, NULL,
+						CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+					WriteFile(file, _tile, sizeof(tagTile) * TILEX * TILEY, &write, NULL);
+					CloseHandle(file);
+				}
+				if (y == 4)
+				{
+					HANDLE file;
+					DWORD read;
+
+					file = CreateFile("stageOne", GENERIC_READ, 0, NULL,
+						OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+					ReadFile(file, _tile, sizeof(tagTile) * TILEX * TILEY, &read, NULL);
+					CloseHandle(file);
+				}
 				_option[y].select = true;
 				_nowselecct = _option[y].kind;
 				_nowdraw = _option[y].type;
@@ -485,7 +505,8 @@ void mapTool::tiledraw(void)
 		//가로 테이블
 		if (_nowselecct == W_TABLE)
 		{
-			if (_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx + 1].obj == NONE)
+			if ((_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx + 1].obj == NONE) &&
+				(_tile[nowy][nowx].wall == VOID_WALL && _tile[nowy][nowx + 1].wall == VOID_WALL))
 			{
 				_tile[nowy][nowx].objframeX = 3;
 				_tile[nowy][nowx].objframeY = 5;
@@ -498,7 +519,8 @@ void mapTool::tiledraw(void)
 		//세로 테이블
 		if (_nowselecct == L_TABLE)
 		{
-			if (_tile[nowy][nowx].obj == NONE && _tile[nowy - 1][nowx].obj == NONE)
+			if ((_tile[nowy][nowx].obj == NONE && _tile[nowy - 1][nowx].obj == NONE) &&
+				_tile[nowy][nowx].wall == VOID_WALL && _tile[nowy - 1][nowx].wall == VOID_WALL)
 			{
 				_tile[nowy][nowx].objframeX = 6;
 				_tile[nowy][nowx].objframeY = 6;
@@ -511,12 +533,12 @@ void mapTool::tiledraw(void)
 		//나무 통 or 폭탄통
 		if (_nowselecct == W_BARREL || _nowselecct == B_BARREL)
 		{
-			if (_tile[nowy][nowx].obj == NONE) { _tile[nowy][nowx].obj = (_nowselecct == W_BARREL) ? WOOD_BARREL : BOOM_BARREL; }
+			if (_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx].wall == VOID_WALL) { _tile[nowy][nowx].obj = (_nowselecct == W_BARREL) ? WOOD_BARREL : BOOM_BARREL; }
 		}
 		//총알 or 반달리스트
 		if (_nowselecct == K_BULLET || _nowselecct == B_BULLET)
 		{
-			if (_tile[nowy][nowx].obj == NONE)
+			if (_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx].wall == VOID_WALL)
 			{
 				_tile[nowy][nowx].obj = (_nowselecct == K_BULLET) ? BULLET_KIN : BULLET_BANDANA;
 				_tile[nowy][nowx].sponSequence = 1;
@@ -525,7 +547,7 @@ void mapTool::tiledraw(void)
 		//샷건 or 건넛
 		if (_nowselecct == R_SHOTGUN || _nowselecct == GUNUT)
 		{
-			if (_tile[nowy][nowx].obj == NONE)
+			if (_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx].wall == VOID_WALL)
 			{
 				_tile[nowy][nowx].obj = (_nowselecct == R_SHOTGUN) ? SHOTGUN_RED : GUN_NUT;
 				_tile[nowy][nowx].sponSequence = 1;
@@ -552,7 +574,7 @@ void mapTool::tiledraw(void)
 			{
 				for (int x = startX; x < endX + 1; ++x)
 				{
-					if (_tile[y][x].obj != NONE)
+					if (_tile[y][x].obj != NONE || _tile[y][x].wall != VOID_WALL)
 					{
 						_dragrc = RectMake(0, 0, 0, 0);
 						return;
@@ -567,81 +589,81 @@ void mapTool::tiledraw(void)
 					//각 모서리
 					if (y == startY && x == startX)//왼쪽위
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 7 : 4;
-						_tile[y][x].objframeY = 0;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 7 : 4;
+						_tile[y][x].wallY = 0;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						continue;
 					}
 					if (y == startY && x == endX)//오른쪽위
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 9 : 6;
-						_tile[y][x].objframeY = 0;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 9 : 6;
+						_tile[y][x].wallY = 0;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						continue;
 					}
 					if (y == endY - 2 && x == startX)//왼쪽아래
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 7 : 4;
-						_tile[y][x].objframeY = 2;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 7 : 4;
+						_tile[y][x].wallY = 2;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 						continue;
 					}
 					if (y == endY - 2 && x == endX)//오른쪽아래
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 9 : 6;
-						_tile[y][x].objframeY = 2;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 9 : 6;
+						_tile[y][x].wallY = 2;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 						continue;
 					}
 					//사변
 					if (y == startY)//위
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 8 : 5;
-						_tile[y][x].objframeY = 0;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 8 : 5;
+						_tile[y][x].wallY = 0;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 					}
 					else if (y == endY - 2)//아래
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 8 : 5;
-						_tile[y][x].objframeY = 2;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 8 : 5;
+						_tile[y][x].wallY = 2;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (x == startX && y < endY - 2)//왼쪽
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 7 : 4;
-						_tile[y][x].objframeY = 1;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 7 : 4;
+						_tile[y][x].wallY = 1;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (x == endX && y < endY - 2)//오른쪽
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 9 : 6;
-						_tile[y][x].objframeY = 1;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 9 : 6;
+						_tile[y][x].wallY = 1;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (y == endY - 1) //윗 벽돌
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 4 : 3;
-						_tile[y][x].objframeY = 3;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 4 : 3;
+						_tile[y][x].wallY = 3;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (y == endY) //아래 벽돌
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 4 : 3;
-						_tile[y][x].objframeY = 4;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 4 : 3;
+						_tile[y][x].wallY = 4;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else //벽 안쪽
 					{
-						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 5 : 5;
-						_tile[y][x].objframeY = 1;
-						_tile[y][x].obj = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 5 : 5;
+						_tile[y][x].wallY = 1;
+						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 				}
@@ -735,85 +757,85 @@ void mapTool::tiledraw(void)
 					//각 모서리
 					if (y == startY && x == startX)//왼쪽위
 					{
-						_tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 11 : 13;
-						_tile[y][x].objframeY = 3;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 11 : 13;
+						_tile[y][x].wallY = 3;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						continue;
 					}
 					if (y == startY && x == endX)//오른쪽위
 					{
-						_tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 12 : 14;
-						_tile[y][x].objframeY = 3;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 12 : 14;
+						_tile[y][x].wallY = 3;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						continue;
 					}
 					if (y == endY && x == startX)//왼쪽아래
 					{
-						_tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 11 : 13;
-						_tile[y][x].objframeY = 4;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 11 : 13;
+						_tile[y][x].wallY = 4;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 						continue;
 					}
 					if (y == endY && x == endX)//오른쪽아래
 					{
-						_tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 12 : 14;
-						_tile[y][x].objframeY = 4;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 12 : 14;
+						_tile[y][x].wallY = 4;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 						continue;
 					}
 					//사변
 					if (y == startY)//위
 					{
-						_tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 8 : 5;
-						_tile[y][x].objframeY = 2;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 8 : 5;
+						_tile[y][x].wallY = 2;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (y == endY)//아래
 					{
 						_tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 8 : 5;
 						_tile[y][x].objframeY = 0;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].obj = WALL_TOP;
 					}
 					else if (y == endY + 1)//더아래
 					{
-						_tile[y][x].objframeX = 5;
-						_tile[y][x].objframeY = 1;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = 5;
+						_tile[y][x].wallY = 1;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (x == startX && y < endY)//왼쪽
 					{
-						_tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 9 : 6;
-						_tile[y][x].objframeY = 1;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 9 : 6;
+						_tile[y][x].wallY = 1;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (x == endX && y < endY)//오른쪽
 					{
-						_tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 7 : 4;
-						_tile[y][x].objframeY = 1;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 7 : 4;
+						_tile[y][x].wallY = 1;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (y == startY + 1 && (x > startX && x < endX)) //윗 벽돌
 					{
-						if (x == startX + 1) { _tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 4 : 5; }
-						else if (x == endX - 1) { _tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 4 : 9; }
-						else { _tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 4 : bwal; }
-						_tile[y][x].objframeY = 3;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						if (x == startX + 1) { _tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 4 : 5; }
+						else if (x == endX - 1) { _tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 4 : 9; }
+						else { _tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 4 : bwal; }
+						_tile[y][x].wallY = 3;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					else if (y == startY + 2 && (x > startX && x < endX)) //아래 벽돌
 					{
-						if (x == startX + 1) { _tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 4 : 5; }
-						else if (x == endX - 1) { _tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 4 : 9; }
-						else { _tile[y][x].objframeX = (_nowselecct == STON_ROOM) ? 4 : bwal; }
-						_tile[y][x].objframeY = 4;
-						_tile[y][x].obj = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
+						if (x == startX + 1) { _tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 4 : 5; }
+						else if (x == endX - 1) { _tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 4 : 9; }
+						else { _tile[y][x].wallX = (_nowselecct == STON_ROOM) ? 4 : bwal; }
+						_tile[y][x].wallY = 4;
+						_tile[y][x].wall = (_nowselecct == STON_ROOM) ? STON_WALL : BOOK_WALL;
 						_tile[y][x].pass = false;
 					}
 					//장판을 깐다
@@ -849,8 +871,9 @@ void mapTool::tiledraw(void)
 				for (int x = startX; x < endX + 1; ++x)
 				{
 					_tile[y][x].obj = NONE;
-					_tile[y][x].objframeX = 5;
-					_tile[y][x].objframeY = 1;
+					_tile[y][x].wall = VOID_WALL;
+					_tile[y][x].objframeX = _tile[y][x].wallX = 5;
+					_tile[y][x].objframeY = _tile[y][x].wallY = 1;
 					_tile[y][x].sponSequence = 0;
 					_tile[y][x].pass = true;
 				}
@@ -862,318 +885,331 @@ void mapTool::tiledraw(void)
 		//텔레포터 만들때
 		if (_nowselecct == O_TP)
 		{
-			for (int ty = 6, y = _start.y; y < _start.y + 2; ++y, ++ty)
+			if (_tile[_start.y][_start.x].obj == NONE && _tile[_start.y][_start.x].wall == VOID_WALL)
 			{
-				for (int tx = 0, x = _start.x; x < _start.x + 2; ++x, ++tx)
+				for (int ty = 6, y = _start.y; y < _start.y + 2; ++y, ++ty)
 				{
-					if (y == _start.y && x == _start.x) { _tile[y][x].obj = TELEPOTER; }
-					else { _tile[y][x].obj = BLANK; }
-					_tile[y][x].objframeX = tx;
-					_tile[y][x].objframeY = ty;
+					for (int tx = 0, x = _start.x; x < _start.x + 2; ++x, ++tx)
+					{
+						if (y == _start.y && x == _start.x) { _tile[y][x].obj = TELEPOTER; }
+						else { _tile[y][x].obj = BLANK; }
+						_tile[y][x].objframeX = tx;
+						_tile[y][x].objframeY = ty;
+					}
 				}
 			}
 		}
 		//문 설치할때
 		if (_nowselecct == O_DOOR)
 		{
-			bool makeok = true;
-			int sy, sx, ey, ex;
-			sy = ey = _start.y; sx = ex = _start.x;
-			if (_tile[sy - 1][sx].roomnum == 0 || _tile[sy + 2][sx].roomnum == 0) //위또는 아래로 만들자
+			if (_tile[_start.y][_start.x].roomnum != 0)
 			{
-				if (_tile[sy - 1][sx].roomnum == 0)
+				bool makeok = true;
+				int sy, sx, ey, ex;
+				sy = ey = _start.y; sx = ex = _start.x;
+				if (_tile[sy - 1][sx].roomnum == 0 || _tile[sy + 2][sx].roomnum == 0) //위또는 아래로 만들자
 				{
-					while (_tile[sy - 1][sx].roomnum == 0) { if (sy - 1 == 0) { makeok = false; break; } --sy; }
-					sy -= 2;
-					++ey;
-				}
-				else if (_tile[sy + 2][sx].roomnum == 0)
-				{
-					while (_tile[ey + 2][sx].roomnum == 0) { if (ey + 2 == TILEY) { makeok = false; break; } ++ey; }
-					ey += 3;
-				}
-				if (!makeok) { return; }
-				ex += 4;
-
-				for (int y = sy; y < ey; ++y)
-				{
-					for (int x = sx; x < ex; ++x)
+					if (_tile[sy - 1][sx].roomnum == 0)
 					{
-						if (y == sy && x == sx)//왼쪽위
+						while (_tile[sy - 1][sx].roomnum == 0) { if (sy - 1 == 0) { makeok = false; break; } --sy; }
+						sy -= 2;
+						++ey;
+					}
+					else if (_tile[sy + 2][sx].roomnum == 0)
+					{
+						while (_tile[ey + 2][sx].roomnum == 0) { if (ey + 3 >= TILEY) { makeok = false; break; } ++ey; }
+						ey += 3;
+					}
+					if (!makeok) { return; }
+					ex += 4;
+
+					for (int y = sy; y < ey; ++y)
+					{
+						for (int x = sx; x < ex; ++x)
 						{
-							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 9 : 6;
-							_tile[y][x].objframeY = 0;
-							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							_tile[y][x].pass = true;
-							continue;
-						}
-						if (y == sy && x == ex - 1)//오른쪽위
-						{
-							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 7 : 4;
-							_tile[y][x].objframeY = 0;
-							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							_tile[y][x].pass = true;
-							continue;
-						}
-						if (y == ey - 1 && x == sx)//왼쪽아래
-						{
-							if (_tile[y][x].obj == STON_WALL)
+							if (y == sy && x == sx)//왼쪽위
 							{
-								_tile[y][x].objframeX = 9;
-								_tile[y][x].objframeY = 2;
-								_tile[y][x].obj = STON_WALL;
+								_tile[y][x].objframeX = (_tile[y + 1][x].wall == STON_WALL) ? 9 : 6;
+								_tile[y][x].objframeY = 0;
+								_tile[y][x].obj = WALL_TOP;
+								_tile[y][x].wall = VOID_WALL;
+								_tile[y][x].pass = true;
+								continue;
+							}
+							if (y == sy && x == ex - 1)//오른쪽위
+							{
+								_tile[y][x].objframeX = (_tile[y + 1][x].wall == STON_WALL) ? 7 : 4;
+								_tile[y][x].objframeY = 0;
+								_tile[y][x].obj = WALL_TOP;
+								_tile[y][x].wall = VOID_WALL;
+								_tile[y][x].pass = true;
+								continue;
+							}
+							if (y == ey - 1 && x == sx)//왼쪽아래
+							{
+								if (_tile[y][x].wall == STON_WALL)
+								{
+									_tile[y][x].wallX = 9;
+									_tile[y][x].wallY = 2;
+									_tile[y][x].wall = STON_WALL;
+									_tile[y][x].pass = false;
+								}
+								else
+								{
+									_tile[y][x].wallX = 6;
+									_tile[y][x].wallY = 2;
+									_tile[y][x].wall = BOOK_WALL;
+									_tile[y][x].pass = false;
+									_tile[y + 1][x].wallX = 9;
+									_tile[y + 1][x].wallY = 3;
+									_tile[y + 1][x].wall = BOOK_WALL;
+									_tile[y + 1][x].pass = false;
+									_tile[y + 2][x].wallX = 9;
+									_tile[y + 2][x].wallY = 4;
+									_tile[y + 2][x].wall = BOOK_WALL;
+									_tile[y + 2][x].pass = false;
+								}
+								continue;
+							}
+							if (y == ey - 1 && x == ex - 1)//오른쪽아래
+							{
+								if (_tile[y][x].wall == STON_WALL)
+								{
+									_tile[y][x].wallX = 7;
+									_tile[y][x].wallY = 2;
+									_tile[y][x].wall = STON_WALL;
+									_tile[y][x].pass = false;
+								}
+								else
+								{
+									_tile[y][x].wallX = 4;
+									_tile[y][x].wallY = 2;
+									_tile[y][x].wall = BOOK_WALL;
+									_tile[y][x].pass = false;
+									_tile[y + 1][x].wallX = 5;
+									_tile[y + 1][x].wallY = 3;
+									_tile[y + 1][x].wall = BOOK_WALL;
+									_tile[y + 1][x].pass = false;
+									_tile[y + 2][x].wallX = 5;
+									_tile[y + 2][x].wallY = 4;
+									_tile[y + 2][x].wall = BOOK_WALL;
+									_tile[y + 2][x].pass = false;
+								}
+								continue;
+							}
+							if (y == sy) //위
+							{
+								_tile[y][x].terrainX = 3;
+								_tile[y][x].terrainY = (_tile[y + 1][x].wall == STON_WALL) ? RND->getInt(2) : 2;
+								_tile[y][x].terrain = (_tile[y + 1][x].wall == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
+								_tile[y][x].obj = NONE;
+								_tile[y][x].wall = VOID_WALL;
+								_tile[y][x].pass = true;
+								_tile[y + 1][x].terrainX = 3;
+								_tile[y + 1][x].terrainY = RND->getInt(2);;
+								_tile[y + 1][x].terrain = STON_FLOOR;
+								_tile[y + 1][x].objframeX = (x == sx + 1) ? 7 : 8;
+								_tile[y + 1][x].objframeY = 5;
+								_tile[y + 1][x].obj = (x == sx + 1) ? DOOR_LENGTH : BLANK;
+								_tile[y + 1][x].wall = VOID_WALL;
+								_tile[y + 1][x].pass = true;
+								_tile[y + 2][x].terrainX = 3;
+								_tile[y + 2][x].terrainY = RND->getInt(2);;
+								_tile[y + 2][x].terrain = STON_FLOOR;
+								_tile[y + 2][x].objframeX = (x == sx + 1) ? 7 : 8;
+								_tile[y + 2][x].objframeY = 6;
+								_tile[y + 2][x].obj = BLANK;
+								_tile[y + 2][x].wall = VOID_WALL;
+								_tile[y + 2][x].pass = true;
+							}
+							else if (y == ey - 1) //아래
+							{
+								_tile[y][x].terrainX = 3;
+								_tile[y][x].terrainY = RND->getInt(2);;
+								_tile[y][x].terrain = STON_FLOOR;
+								_tile[y][x].objframeX = (x == sx + 1) ? 7 : 8;
+								_tile[y][x].objframeY = 5;
+								_tile[y][x].obj = (x == sx + 1) ? DOOR_LENGTH : BLANK;
+								_tile[y][x].wall = VOID_WALL;
+								_tile[y][x].pass = true;
+								_tile[y + 1][x].terrainX = 3;
+								_tile[y + 1][x].terrainY = RND->getInt(2);;
+								_tile[y + 1][x].terrain = STON_FLOOR;
+								_tile[y + 1][x].objframeX = (x == sx + 1) ? 7 : 8;
+								_tile[y + 1][x].objframeY = 6;
+								_tile[y + 1][x].obj = BLANK;
+								_tile[y + 1][x].wall = VOID_WALL;
+								_tile[y + 1][x].pass = true;
+								_tile[y + 2][x].terrainX = 3;
+								_tile[y + 2][x].terrainY = (_tile[y + 2][x].wall == STON_WALL) ? RND->getInt(2) : 2;
+								_tile[y + 2][x].terrain = (_tile[y + 2][x].wall == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
+								_tile[y + 2][x].wall = VOID_WALL;
+								_tile[y + 2][x].obj = NONE;
+								_tile[y + 2][x].pass = true;
+							}
+							else if (x == sx)//왼쪽
+							{
+								_tile[y][x].wallX = (_tile[ey - 1][ex - 1].wall == STON_WALL) ? 9 : 6;
+								_tile[y][x].wallY = 1;
+								_tile[y][x].wall = (_tile[ey - 1][ex - 1].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].pass = false;
+							}
+							else if (x == ex - 1)//오른쪽
+							{
+								_tile[y][x].wallX = (_tile[ey - 1][ex - 1].wall == STON_WALL) ? 7 : 4;
+								_tile[y][x].wallY = 1;
+								_tile[y][x].wall = (_tile[ey - 1][ex - 1].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
 								_tile[y][x].pass = false;
 							}
 							else
 							{
-								_tile[y][x].objframeX = 6;
-								_tile[y][x].objframeY = 2;
-								_tile[y][x].obj = BOOK_WALL;
-								_tile[y][x].pass = false;
-								_tile[y + 1][x].objframeX = 9;
-								_tile[y + 1][x].objframeY = 3;
-								_tile[y + 1][x].obj = BOOK_WALL;
-								_tile[y + 1][x].pass = false;
-								_tile[y + 2][x].objframeX = 9;
-								_tile[y + 2][x].objframeY = 4;
-								_tile[y + 2][x].obj = BOOK_WALL;
-								_tile[y + 2][x].pass = false;
+								_tile[y][x].terrainX = 3;
+								_tile[y][x].terrainY = RND->getInt(2);;
+								_tile[y][x].terrain = STON_FLOOR;
+								_tile[y][x].pass = true;
 							}
-							continue;
-						}
-						if (y == ey - 1 && x == ex - 1)//오른쪽아래
-						{
-							if (_tile[y][x].obj == STON_WALL)
-							{
-								_tile[y][x].objframeX = 7;
-								_tile[y][x].objframeY = 2;
-								_tile[y][x].obj = STON_WALL;
-								_tile[y][x].pass = false;
-							}
-							else
-							{
-								_tile[y][x].objframeX = 4;
-								_tile[y][x].objframeY = 2;
-								_tile[y][x].obj = BOOK_WALL;
-								_tile[y][x].pass = false;
-								_tile[y + 1][x].objframeX = 5;
-								_tile[y + 1][x].objframeY = 3;
-								_tile[y + 1][x].obj = BOOK_WALL;
-								_tile[y + 1][x].pass = false;
-								_tile[y + 2][x].objframeX = 5;
-								_tile[y + 2][x].objframeY = 4;
-								_tile[y + 2][x].obj = BOOK_WALL;
-								_tile[y + 2][x].pass = false;
-							}
-							continue;
-						}
-						if (y == sy) //위
-						{
-							_tile[y][x].terrainX = 3;
-							_tile[y][x].terrainY = (_tile[y][x].obj == STON_WALL) ? RND->getInt(2) : 2;
-							_tile[y][x].terrain = (_tile[y][x].obj == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
-							_tile[y][x].obj = NONE;
-							_tile[y][x].pass = true;
-							_tile[y + 1][x].terrainX = 3;
-							_tile[y + 1][x].terrainY = RND->getInt(2);;
-							_tile[y + 1][x].terrain = STON_FLOOR;
-							_tile[y + 1][x].objframeX = (x == sx + 1) ? 7 : 8;
-							_tile[y + 1][x].objframeY = 5;
-							_tile[y + 1][x].obj = (x == sx + 1) ? DOOR_LENGTH : BLANK;
-							_tile[y + 1][x].pass = true;
-							_tile[y + 2][x].terrainX = 3;
-							_tile[y + 2][x].terrainY = RND->getInt(2);;
-							_tile[y + 2][x].terrain = STON_FLOOR;
-							_tile[y + 2][x].objframeX = (x == sx + 1) ? 7 : 8;
-							_tile[y + 2][x].objframeY = 6;
-							_tile[y + 2][x].obj = BLANK;
-							_tile[y + 2][x].pass = true;
-						}
-						else if (y == ey - 1) //아래
-						{
-							_tile[y][x].terrainX = 3;
-							_tile[y][x].terrainY = RND->getInt(2);;
-							_tile[y][x].terrain = STON_FLOOR;
-							_tile[y][x].objframeX = (x == sx + 1) ? 7 : 8;
-							_tile[y][x].objframeY = 5;
-							_tile[y][x].obj = (x == sx + 1) ? DOOR_LENGTH : BLANK;
-							_tile[y][x].pass = true;
-							_tile[y + 1][x].terrainX = 3;
-							_tile[y + 1][x].terrainY = RND->getInt(2);;
-							_tile[y + 1][x].terrain = STON_FLOOR;
-							_tile[y + 1][x].objframeX = (x == sx + 1) ? 7 : 8;
-							_tile[y + 1][x].objframeY = 6;
-							_tile[y + 1][x].obj = BLANK;
-							_tile[y + 1][x].pass = true;
-							_tile[y + 2][x].terrainX = 3;
-							_tile[y + 2][x].terrainY = (_tile[y + 2][x].obj == STON_WALL) ? RND->getInt(2) : 2;
-							_tile[y + 2][x].terrain = (_tile[y + 2][x].obj == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
-							_tile[y + 2][x].obj = NONE;
-							_tile[y + 2][x].pass = true;
-						}
-						else if (x == sx)//왼쪽
-						{
-							_tile[y][x].objframeX = (_tile[ey - 1][ex - 1].obj == STON_WALL) ? 9 : 6;
-							_tile[y][x].objframeY = 1;
-							_tile[y][x].obj = (_tile[ey - 1][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							_tile[y][x].pass = false;
-						}
-						else if (x == ex - 1)//오른쪽
-						{
-							_tile[y][x].objframeX = (_tile[ey - 1][ex - 1].obj == STON_WALL) ? 7 : 4;
-							_tile[y][x].objframeY = 1;
-							_tile[y][x].obj = (_tile[ey - 1][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							_tile[y][x].pass = false;
-						}
-						else
-						{
-							_tile[y][x].terrainX = 3;
-							_tile[y][x].terrainY = RND->getInt(2);;
-							_tile[y][x].terrain = STON_FLOOR;
-							_tile[y][x].pass = true;
 						}
 					}
 				}
-
-			}
-			if (_tile[sy][sx - 1].roomnum == 0 || _tile[sy][sx + 1].roomnum == 0) //왼쪽이나 오른쪽으로 만들자
-			{
-				if (_tile[sy][sx - 1].roomnum == 0)
+				if (_tile[sy][sx - 1].roomnum == 0 || _tile[sy][sx + 1].roomnum == 0) //왼쪽이나 오른쪽으로 만들자
 				{
-					while (_tile[sy][sx - 1].roomnum == 0) { if (sx - 1 == 0) { makeok = false; break; } --sx; }
-					sx -= 1;
-					++ex;
-				}
-				else if (_tile[sy][sx + 1].roomnum == 0)
-				{
-
-				}
-				ey += 5;
-
-
-				for (int y = sy; y < ey; ++y)
-				{
-					for (int x = sx; x < ex; ++x)
+					if (_tile[sy][sx - 1].roomnum == 0)
 					{
-						if (y == sy && x == sx)//왼쪽위
+						while (_tile[sy][sx - 1].roomnum == 0) { if (sx - 1 <= 0) { makeok = false; break; } --sx; }
+						sx -= 1;
+						++ex;
+					}
+					else if (_tile[sy][sx + 1].roomnum == 0)
+					{
+						while (_tile[sy][ex + 1].roomnum == 0) { if (ex + 1 >= TILEX) { makeok = false; break; } ++ex; }
+						ex += 2;
+					}
+					if (!makeok) { return; }
+					ey += 5;
+
+					for (int y = sy; y < ey; ++y)
+					{
+						for (int x = sx; x < ex; ++x)
 						{
-							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 7 : 4;
-							_tile[y][x].objframeY = 2;
-							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							continue;
-						}
-						if (y == sy && x == ex - 1)//오른쪽위
-						{
-							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 9 : 6;
-							_tile[y][x].objframeY = 2;
-							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							continue;
-						}
-						if (y == ey - 1 && x == sx)//왼쪽아래
-						{
-							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 7 : 4;
-							_tile[y][x].objframeY = 0;
-							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							continue;
-						}
-						if (y == ey - 1 && x == ex - 1)//오른쪽아래
-						{
-							_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 9 : 6;
-							_tile[y][x].objframeY = 0;
-							_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							continue;
-						}
-						if (y == sy)//위
-						{
-							_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 8 : 5;
-							_tile[y][x].objframeY = 2;
-							_tile[y][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							_tile[y][x].pass = false;
-						}
-						else if (y == sy + 1 && (x == sx + 1 || x == ex - 2))//문짝
-						{
-							_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 10 : 17;
-							_tile[y][x].objframeY = 4;
-							_tile[y][x].obj = BLANK;
-							_tile[y + 1][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 10 : 17;
-							_tile[y + 1][x].objframeY = 5;
-							_tile[y + 1][x].obj = BLANK;
-							_tile[y + 2][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 10 : 17;
-							_tile[y + 2][x].objframeY = 6;
-							_tile[y + 2][x].obj = DOOR_WIDTH;
-						}
-						else if (y == sy + 1)//윗 벽돌
-						{
-							if (x == sx)
+							if (y == sy && x == sx)//왼쪽위
 							{
-								_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 4 : 3;
-								_tile[y][x].objframeY = 3;
-								_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].wallX = (_tile[y][x].wall == STON_WALL) ? 7 : 4;
+								_tile[y][x].wallY = 2;
+								_tile[y][x].wall = (_tile[y][x].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								continue;
+							}
+							if (y == sy && x == ex - 1)//오른쪽위
+							{
+								_tile[y][x].wallX = (_tile[y][x].wall == STON_WALL) ? 9 : 6;
+								_tile[y][x].wallY = 2;
+								_tile[y][x].wall = (_tile[y][x].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								continue;
+							}
+							if (y == ey - 1 && x == sx)//왼쪽아래
+							{
+								_tile[y][x].wallX = (_tile[y][x].wall == STON_WALL) ? 7 : 4;
+								_tile[y][x].wallY = 0;
+								_tile[y][x].wall = (_tile[y][x].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								continue;
+							}
+							if (y == ey - 1 && x == ex - 1)//오른쪽아래
+							{
+								_tile[y][x].wallX = (_tile[y][x].wall == STON_WALL) ? 9 : 6;
+								_tile[y][x].wallY = 0;
+								_tile[y][x].wall = (_tile[y][x].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								continue;
+							}
+							if (y == sy)//위
+							{
+								_tile[y][x].wallX = (_tile[y][ex - 1].wall == STON_WALL) ? 8 : 5;
+								_tile[y][x].wallY = 2;
+								_tile[y][x].wall = (_tile[y][ex - 1].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
 								_tile[y][x].pass = false;
+							}
+							else if (y == sy + 1)//윗 벽돌
+							{
+								if (x == sx)
+								{
+									_tile[y][x].wallX = (_tile[y][x].wall == STON_WALL) ? 4 : 3;
+									_tile[y][x].wallY = 3;
+									_tile[y][x].wall = (_tile[y][x].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+									_tile[y][x].pass = false;
+								}
+								else
+								{
+									_tile[y][x].wallX = (_tile[y][ex - 1].wall == STON_WALL) ? 4 : 3;
+									_tile[y][x].wallY = 3;
+									_tile[y][x].wall = (_tile[y][ex - 1].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+									_tile[y][x].pass = false;
+								}
+							}
+							else if (y == sy + 2)//아랫 벽돌
+							{
+								if (x == sx)
+								{
+									_tile[y][x].wallX = (_tile[y][x].wall == STON_WALL) ? 4 : 3;
+									_tile[y][x].wallY = 4;
+									_tile[y][x].wall = (_tile[y][x].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+									_tile[y][x].pass = false;
+								}
+								else
+								{
+									_tile[y][x].wallX = (_tile[y][ex - 1].wall == STON_WALL) ? 4 : 3;
+									_tile[y][x].wallY = 4;
+									_tile[y][x].wall = (_tile[y][ex - 1].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+									_tile[y][x].pass = false;
+								}
+							}
+							else if (y == ey - 1)//아래
+							{
+								_tile[y][x].wallX = (_tile[y][ex - 1].wall == STON_WALL) ? 8 : 5;
+								_tile[y][x].wallY = 0;
+								_tile[y][x].wall = (_tile[y][ex - 1].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].pass = true;
+								_tile[y + 1][x].wallX = 5;
+								_tile[y + 1][x].wallY = 1;
+								_tile[y + 1][x].wall = (_tile[y][ex - 1].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y + 1][x].pass = false;
+							}
+							else if (x == sx)//왼쪽
+							{
+								_tile[y][x].terrainX = 3;
+								_tile[y][x].terrainY = (_tile[y][x].wall == STON_WALL) ? RND->getInt(2) : 2;
+								_tile[y][x].terrain = (_tile[y][x].wall == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
+								_tile[y][x].wall = VOID_WALL;
+								_tile[y][x].pass = true;
+							}
+							else if (x == ex - 1)//오른쪽
+							{
+								_tile[y][x].terrainX = 3;
+								_tile[y][x].terrainY = (_tile[y][x].wall == STON_WALL) ? RND->getInt(2) : 2;
+								_tile[y][x].terrain = (_tile[y][x].wall == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
+								_tile[y][x].wall = VOID_WALL;
+								_tile[y][x].pass = true;
 							}
 							else
 							{
-								_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 4 : 3;
-								_tile[y][x].objframeY = 3;
-								_tile[y][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-								_tile[y][x].pass = false;
+								_tile[y][x].terrainX = 3;
+								_tile[y][x].terrainY = RND->getInt(2);;
+								_tile[y][x].terrain = STON_FLOOR;
+								_tile[y][x].pass = true;
 							}
-						}
-						else if (y == sy + 2)//아랫 벽돌
-						{
-							if (x == sx)
+							if (y == sy + 1 && (x == sx + 1 || x == ex - 2))//문짝
 							{
-								_tile[y][x].objframeX = (_tile[y][x].obj == STON_WALL) ? 4 : 3;
+								_tile[y][x].objframeX = 10;
 								_tile[y][x].objframeY = 4;
-								_tile[y][x].obj = (_tile[y][x].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-								_tile[y][x].pass = false;
+								_tile[y][x].obj = BLANK;
+								_tile[y + 1][x].objframeX = 10;
+								_tile[y + 1][x].objframeY = 5;
+								_tile[y + 1][x].obj = BLANK;
+								_tile[y + 2][x].objframeX = 10;
+								_tile[y + 2][x].objframeY = 6;
+								_tile[y + 2][x].obj = DOOR_WIDTH;
 							}
-							else
-							{
-								_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 4 : 3;
-								_tile[y][x].objframeY = 4;
-								_tile[y][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-								_tile[y][x].pass = false;
-							}
-						}
-						else if (y == ey - 1)//아래
-						{
-							_tile[y][x].objframeX = (_tile[y][ex - 1].obj == STON_WALL) ? 8 : 5;
-							_tile[y][x].objframeY = 0;
-							_tile[y][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							_tile[y][x].pass = true;
-							_tile[y + 1][x].objframeX = 5;
-							_tile[y + 1][x].objframeY = 1;
-							_tile[y + 1][x].obj = (_tile[y][ex - 1].obj == STON_WALL) ? STON_WALL : BOOK_WALL;
-							_tile[y + 1][x].pass = false;
-						}
-						else if (x == sx)//왼쪽
-						{
-							_tile[y][x].terrainX = 3;
-							_tile[y][x].terrainY = (_tile[y][x].obj == STON_WALL) ? RND->getInt(2) : 2;
-							_tile[y][x].terrain = (_tile[y][x].obj == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
-							_tile[y][x].obj = NONE;
-							_tile[y][x].pass = true;
-						}
-						else if (x == ex - 1)//오른쪽
-						{
-							_tile[y][x].terrainX = 3;
-							_tile[y][x].terrainY = (_tile[y][x].obj == STON_WALL) ? RND->getInt(2) : 2;
-							_tile[y][x].terrain = (_tile[y][x].obj == STON_WALL) ? STON_FLOOR : WOOD_FLOOR;
-							_tile[y][x].obj = NONE;
-							_tile[y][x].pass = true;
-						}
-						else
-						{
-							_tile[y][x].terrainX = 3;
-							_tile[y][x].terrainY = RND->getInt(2);;
-							_tile[y][x].terrain = STON_FLOOR;
-							_tile[y][x].pass = true;
 						}
 					}
 				}
 			}
-			if (_tile[sy][sx + 1].obj == NONE) {} //오른쪽으로 만들자
 		}
 		//시작방 만들떄
 		if (_nowselecct == START_ROOM)
@@ -1199,81 +1235,81 @@ void mapTool::tiledraw(void)
 						//각 모서리
 						if (y == _start.y && x == _start.x)//왼쪽위
 						{
-							_tile[y][x].objframeX = 11;
-							_tile[y][x].objframeY = 3;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 11;
+							_tile[y][x].wallY = 3;
+							_tile[y][x].wall = STON_WALL;
 							continue;
 						}
 						if (y == _start.y && x == _start.x + 21)//오른쪽위
 						{
-							_tile[y][x].objframeX = 12;
-							_tile[y][x].objframeY = 3;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 12;
+							_tile[y][x].wallY = 3;
+							_tile[y][x].wall = STON_WALL;
 							continue;
 						}
 						if (y == _start.y + 23 && x == _start.x)//왼쪽아래
 						{
-							_tile[y][x].objframeX = 11;
-							_tile[y][x].objframeY = 4;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 11;
+							_tile[y][x].wallY = 4;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 							continue;
 						}
 						if (y == _start.y + 23 && x == _start.x + 21)//오른쪽아래
 						{
-							_tile[y][x].objframeX = 12;
-							_tile[y][x].objframeY = 4;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 12;
+							_tile[y][x].wallY = 4;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 							continue;
 						}
 						//사변
 						if (y == _start.y)//위
 						{
-							_tile[y][x].objframeX = 8;
-							_tile[y][x].objframeY = 2;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 8;
+							_tile[y][x].wallY = 2;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (y == _start.y + 23)//아래
 						{
 							_tile[y][x].objframeX = 8;
 							_tile[y][x].objframeY = 0;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].obj = WALL_TOP;
 						}
 						else if (y == _start.y + 24)//더아래
 						{
-							_tile[y][x].objframeX = 5;
-							_tile[y][x].objframeY = 1;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 5;
+							_tile[y][x].wallY = 1;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (x == _start.x && y < _start.y + 23)//왼쪽
 						{
-							_tile[y][x].objframeX = 9;
-							_tile[y][x].objframeY = 1;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 9;
+							_tile[y][x].wallY = 1;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (x == _start.x + 21 && y < _start.y + 23)//오른쪽
 						{
-							_tile[y][x].objframeX = 7;
-							_tile[y][x].objframeY = 1;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 7;
+							_tile[y][x].wallY = 1;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (y == _start.y + 1 && (x > _start.x && x < _start.x + 21)) //윗 벽돌
 						{
-							_tile[y][x].objframeX = 4;
-							_tile[y][x].objframeY = 3;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 4;
+							_tile[y][x].wallY = 3;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (y == _start.y + 2 && (x > _start.x && x < _start.x + 21)) //아래 벽돌
 						{
-							_tile[y][x].objframeX = 4;
-							_tile[y][x].objframeY = 4;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 4;
+							_tile[y][x].wallY = 4;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						//장판을 깐다
@@ -1287,6 +1323,8 @@ void mapTool::tiledraw(void)
 					}
 					if (y > _start.y + 2 && y < _start.y + 24) { ++ty; }
 				}
+				DATABASE->pstarty = _start.y + 12;
+				DATABASE->pstartx = _start.x + 10;
 				++_makeroom;
 			}
 		}
@@ -1315,81 +1353,81 @@ void mapTool::tiledraw(void)
 						//각 모서리
 						if (y == _start.y && x == _start.x)//왼쪽위
 						{
-							_tile[y][x].objframeX = 11;
-							_tile[y][x].objframeY = 3;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 11;
+							_tile[y][x].wallY = 3;
+							_tile[y][x].wall = STON_WALL;
 							continue;
 						}
 						if (y == _start.y && x == _start.x + 21)//오른쪽위
 						{
-							_tile[y][x].objframeX = 12;
-							_tile[y][x].objframeY = 3;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 12;
+							_tile[y][x].wallY = 3;
+							_tile[y][x].wall = STON_WALL;
 							continue;
 						}
 						if (y == _start.y + 23 && x == _start.x)//왼쪽아래
 						{
-							_tile[y][x].objframeX = 11;
-							_tile[y][x].objframeY = 4;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 11;
+							_tile[y][x].wallY = 4;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 							continue;
 						}
 						if (y == _start.y + 23 && x == _start.x + 21)//오른쪽아래
 						{
-							_tile[y][x].objframeX = 12;
-							_tile[y][x].objframeY = 4;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 12;
+							_tile[y][x].wallY = 4;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 							continue;
 						}
 						//사변
 						if (y == _start.y)//위
 						{
-							_tile[y][x].objframeX = 8;
-							_tile[y][x].objframeY = 2;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 8;
+							_tile[y][x].wallY = 2;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (y == _start.y + 23)//아래
 						{
 							_tile[y][x].objframeX = 8;
 							_tile[y][x].objframeY = 0;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].obj = WALL_TOP;
 						}
 						else if (y == _start.y + 24)//더아래
 						{
-							_tile[y][x].objframeX = 5;
-							_tile[y][x].objframeY = 1;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 5;
+							_tile[y][x].wallY = 1;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (x == _start.x && y < _start.y + 23)//왼쪽
 						{
-							_tile[y][x].objframeX = 9;
-							_tile[y][x].objframeY = 1;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 9;
+							_tile[y][x].wallY = 1;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (x == _start.x + 21 && y < _start.y + 23)//오른쪽
 						{
-							_tile[y][x].objframeX = 7;
-							_tile[y][x].objframeY = 1;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 7;
+							_tile[y][x].wallY = 1;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (y == _start.y + 1 && (x > _start.x && x < _start.x + 21)) //윗 벽돌
 						{
-							_tile[y][x].objframeX = 4;
-							_tile[y][x].objframeY = 3;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 4;
+							_tile[y][x].wallY = 3;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						else if (y == _start.y + 2 && (x > _start.x && x < _start.x + 21)) //아래 벽돌
 						{
-							_tile[y][x].objframeX = 4;
-							_tile[y][x].objframeY = 4;
-							_tile[y][x].obj = STON_WALL;
+							_tile[y][x].wallX = 4;
+							_tile[y][x].wallY = 4;
+							_tile[y][x].wall = STON_WALL;
 							_tile[y][x].pass = false;
 						}
 						//장판을 깐다
@@ -1537,10 +1575,9 @@ void mapTool::tiledraw(void)
 					_tile[y][x].pass = true;
 					_tile[y][x].obj = NONE;
 					_tile[y][x].terrain = EMPTY;
-					_tile[y][x].terrainX = 5;
-					_tile[y][x].terrainY = 1;
-					_tile[y][x].objframeX = 5;
-					_tile[y][x].objframeY = 1;
+					_tile[y][x].wall = VOID_WALL;
+					_tile[y][x].terrainX = _tile[y][x].objframeX = _tile[y][x].wallX = 5;
+					_tile[y][x].terrainY = _tile[y][x].objframeY = _tile[y][x].wallY = 1;
 					_tile[y][x].roomnum = _tile[y][x].sponSequence = 0;
 				}
 			}
@@ -1608,10 +1645,18 @@ void mapTool::bookup(void)
 void mapTool::draw(void)
 {
 	char str[8];
+	int sy = _cam->getRC().top / TILESIZE;
+	int sx = _cam->getRC().left / TILESIZE;
+	int ey = _cam->getRC().bottom / TILESIZE + 1;
+	int ex = _cam->getRC().right / TILESIZE + 1;
+
+	if (ey > TILEY) { ey = TILEY; }
+	if (ex > TILEX) { ex = TILEX; }
+
 	//거 뭐시기냐 그 바닥을 그립니다.
-	for (int y = 0; y < TILEY; ++y)
+	for (int y = sy; y < ey; ++y)
 	{
-		for (int x = 0; x < TILEX; ++x)
+		for (int x = sx; x < ex; ++x)
 		{
 			if (!IntersectRect(&RectMake(0, 0, 0, 0), &_tile[y][x].rc, &_cam->getRC())) { continue; }
 			if (_tile[y][x].terrain == EMPTY)
@@ -1624,11 +1669,20 @@ void mapTool::draw(void)
 			}
 		}
 	}
-
-	//오브젝트를 그립니다.
-	for (int y = 0; y < TILEY; ++y)
+	//벽도 그려줍시다 하하
+	for (int y = sy; y < ey; ++y)
 	{
-		for (int x = 0; x < TILEX; ++x)
+		for (int x = sx; x < ex; ++x)
+		{
+			if (!IntersectRect(&RectMake(0, 0, 0, 0), &_tile[y][x].rc, &_cam->getRC())) { continue; }
+			if (_tile[y][x].wall == VOID_WALL) { continue; }
+			_sample->frameRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top, _tile[y][x].wallX, _tile[y][x].wallY);
+		}
+	}
+	//오브젝트를 그립니다.
+	for (int y = sy; y < ey; ++y)
+	{
+		for (int x = sx; x < ex; ++x)
 		{
 			sprintf(str, "%d", _tile[y][x].sponSequence);
 			if (!IntersectRect(&RectMake(0, 0, 0, 0), &_tile[y][x].rc, &_cam->getRC())) { continue; } //클리핑 영역 안에 없으면 넘어가
@@ -1766,7 +1820,7 @@ void mapTool::minidraw(void)
 			{
 				FillRect(_miniimg->getMemDC(), &_tile[y][x].minirc, bluebrush);
 			}
-			if (_tile[y][x].obj == STON_WALL || _tile[y][x].obj == BOOK_WALL)
+			if (_tile[y][x].wall != VOID_WALL)
 			{
 				FillRect(_miniimg->getMemDC(), &_tile[y][x].minirc, withebrush);
 			}

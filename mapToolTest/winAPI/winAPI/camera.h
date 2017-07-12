@@ -9,8 +9,10 @@ private:
 	POINT* _pt;
 	RECT _rc;
 
+	bool _play;
+
 public:
-	virtual HRESULT init(POINT* pt, image* img);
+	virtual HRESULT init(POINT* pt, image* img, bool play);
 	virtual void release(void);
 	virtual void update(void);
 	virtual void render(void);

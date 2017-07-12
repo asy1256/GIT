@@ -61,14 +61,13 @@ struct tagbigsample
 class mapTool : public gameNode
 {
 private:
-	image* _img;						//카메라에서 사용할 이미지
+	image* _cimg;						//카메라에서 사용할 이미지
 	image* _miniimg;					//미니맵그릴때 사용할 이미지
 	image* _sample;						//타일 샘플 이미지
 	image* _book;						//타일 선택창 이미지
 	image* _alhpa;						//미니맵으로 사용할거 알파블랜더 테스트 이미지
 
 	tagTile _tile[TILEY][TILEX];		//타일
-	tagTile _startRoom[24][22];			//시작방 정보
 	tagfakebutton _tagbutton[6];		//샘플북 태그
 	drawtype _nowdraw;					//선택한 타일 드로우 방식
 	selecttilekind _nowselecct;			//현재 선택한 타일
@@ -99,7 +98,7 @@ public:
 	virtual void update(void);
 	virtual void render(void);
 
-	virtual HDC getBackDC(void) { return _img->getMemDC(); }
+	virtual HDC getBackDC(void) { return _cimg->getMemDC(); }
 	virtual void setup(void);
 	virtual void keycontrol(void);
 	virtual void tileselect(void);

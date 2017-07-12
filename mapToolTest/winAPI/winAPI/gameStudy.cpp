@@ -14,13 +14,13 @@ HRESULT gameStudy::init(void)
 {
 	gameNode::init(true);
 
-	//숙제
-	//NS-Tower 구현하기
-
 	IMAGEMANAGER->addImage("mapImage", "backImage.bmp", WINSIZEX, WINSIZEY);
 
 	//씬 생성
 	SCENEMANAGER->addScene("mapTool", new mapTool);
+	SCENEMANAGER->addScene("loadingScene", new loadingScene);
+	SCENEMANAGER->addScene("titleScene", new titleScene);
+	SCENEMANAGER->addScene("gungeonScene", new gungeonScene);
 	
 	//현재 씬을 _sceneOne으로 설정
 	SCENEMANAGER->changeScene("mapTool");

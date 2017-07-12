@@ -31,6 +31,11 @@ void mapTool::update(void)
 	mousemove();
 	_cam->update();
 	bookup();
+
+	if (KEYMANAGER->isOnceKeyDown(VK_BACK))
+	{
+		SCENEMANAGER->changeScene("gungeonScene");
+	}
 }
 
 void mapTool::render(void)
@@ -44,7 +49,7 @@ void mapTool::setup(void)
 	//필요한 이미지들 추가
 	{
 		_sample = IMAGEMANAGER->addFrameImage("tile", "sampletile.bmp", 1280, 2560, 20, 40, true);
-		_img = IMAGEMANAGER->addImage("bimg", "backImage.bmp", TILEWIDTH, TILEHEIGHT);
+		_cimg = IMAGEMANAGER->addImage("bimg", "backImage.bmp", TILEWIDTH, TILEHEIGHT);
 		_miniimg = IMAGEMANAGER->addImage("mimg", "backImage.bmp", 8 * TILEX, 8 * TILEY, true);
 		_book = IMAGEMANAGER->addImage("book", "samplebook.bmp", 400, 768, true);
 		_alhpa = IMAGEMANAGER->addImage("minimap", "minimap.bmp", 256, 256, true);
@@ -86,7 +91,7 @@ void mapTool::setup(void)
 	SelectObject(getBackDC(), pen);
 
 	_cam = new camera;
-	_cam->init(&_campt, _img);
+	_cam->init(&_campt, _cimg, false);
 
 	//샘플북 태그 초기화
 	for (int y = 40, i = 0; i < 6; ++i, y += 50)
@@ -157,6 +162,7 @@ void mapTool::setup(void)
 		{
 			_tile[y][x].obj = NONE;
 			_tile[y][x].pass = true;
+			_tile[y][x].show = false;
 			_tile[y][x].wall = VOID_WALL;
 			_tile[y][x].terrain = EMPTY;
 			_tile[y][x].terrainX = _tile[y][x].objframeX = _tile[y][x].wallX = 5;
@@ -1232,6 +1238,7 @@ void mapTool::tiledraw(void)
 					for (int tx = 0, x = _start.x; x < _start.x + 22; ++x)
 					{
 						_tile[y][x].roomnum = _makeroom;
+						_tile[y][x].show = true;
 						//각 모서리
 						if (y == _start.y && x == _start.x)//왼쪽위
 						{
@@ -1808,7 +1815,6 @@ void mapTool::draw(void)
 
 void mapTool::minidraw(void)
 {
-	HBRUSH oldbrush = CreateSolidBrush(RGB(0, 0, 0));
 	HBRUSH bluebrush = CreateSolidBrush(RGB(0, 0, 255));
 	HBRUSH withebrush = CreateSolidBrush(RGB(255, 255, 255));
 	IMAGEMANAGER->findImage("black")->render(_miniimg->getMemDC());
@@ -1839,6 +1845,9 @@ void mapTool::minidraw(void)
 	LineMake(getBackDC(), ftemp.right, ftemp.top, ftemp.right, ftemp.bottom);
 	LineMake(getBackDC(), ftemp.right, ftemp.bottom, ftemp.left, ftemp.bottom);
 	LineMake(getBackDC(), ftemp.left, ftemp.bottom, ftemp.left, ftemp.top);
+
+	DeleteObject(bluebrush);
+	DeleteObject(withebrush);
 }
 
 void mapTool::selectdraw(void)

@@ -9,12 +9,13 @@ camera::~camera()
 {
 }
 
-HRESULT camera::init(POINT* pt, image* img)
+HRESULT camera::init(POINT* pt, image* img, bool play)
 {
 	gameNode::init();
 
 	_pt = pt;
 	_img = img;
+	_play = play;
 	_rc = RectMakeCenter(_pt->x, _pt->y, WINSIZEX, WINSIZEY);
 
 	return S_OK;

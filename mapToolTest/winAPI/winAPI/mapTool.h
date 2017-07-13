@@ -66,6 +66,22 @@ private:
 	image* _sample;						//타일 샘플 이미지
 	image* _book;						//타일 선택창 이미지
 	image* _alhpa;						//미니맵으로 사용할거 알파블랜더 테스트 이미지
+	image* _minimapcase;
+	image* _black;
+	image* _ok;
+	image* _no;
+	image* _cover;
+	image* _bigsamplecase;
+	image* _mapoption;
+	image* _bigsampleimg;
+	image* _enemysampleimg;
+	image* _roomsampleimg;
+	image* _booktag;
+	image* _scrollbardown;
+	image* _scrollbar;
+	image* _barrels;
+	image* _enemys;
+private:
 
 	tagTile _tile[TILEY][TILEX];		//타일
 	tagfakebutton _tagbutton[6];		//샘플북 태그

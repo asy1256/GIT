@@ -7,11 +7,12 @@ struct tagCharacter
 	float x, y;
 	RECT rc;
 	image* img;
+	image* gun;
 };
 
 class character : public gameNode
 {
-private:
+protected:
 	tagCharacter _ch;
 
 public:

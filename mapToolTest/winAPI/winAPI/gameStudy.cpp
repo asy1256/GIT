@@ -24,7 +24,11 @@ HRESULT gameStudy::init(void)
 
 	//현재 씬을 _sceneOne으로 설정
 	SCENEMANAGER->changeScene("loadingScene");
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 435d19df0aabdf37fbd42fb6d81ff6b5a9aece44
 	return S_OK;
 }
 

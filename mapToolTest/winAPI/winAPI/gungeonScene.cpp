@@ -97,6 +97,7 @@ void gungeonScene::setup(void)
 			_sample->frameRender(_field->getMemDC(), _tile[y][x].rc.left, _tile[y][x].rc.top, _tile[y][x].wallX, _tile[y][x].wallY);
 		}
 	}
+
 }
 
 void gungeonScene::keycontrol(void)

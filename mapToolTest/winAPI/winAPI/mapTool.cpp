@@ -1712,7 +1712,11 @@ void mapTool::draw(void)
 			}
 			else if (_tile[y][x].obj == BULLET_BANDANA) //반달리스트면 그리고 넘어가
 			{
+<<<<<<< HEAD
 				_enemys->frameRender(getBackDC(), _tile[y][x].rc.left - 32, _tile[y][x].rc.top - 64, 1, 0);
+=======
+				_enemys->frameRender(getBackDC(), _tile[y][x].rc.left - 32, _tile[y][x].rc.top - 64 , 1, 0);
+>>>>>>> 435d19df0aabdf37fbd42fb6d81ff6b5a9aece44
 				TextOut(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - 32, str, strlen(str)); continue;
 			}
 			else if (_tile[y][x].obj == SHOTGUN_RED) //샷건이면 그리고 넘어가
@@ -1846,7 +1850,11 @@ void mapTool::minidraw(void)
 	mtemp.x = (_cam->getRC().left + _campt.x / (TILESIZE / _TILEMINISIZE)) - _minimappt.x + 100;
 	mtemp.y = (_cam->getRC().top + _campt.y / (TILESIZE / _TILEMINISIZE)) - _minimappt.y + 80;
 	RECT ftemp = RectMakeCenter(mtemp.x, mtemp.y, _TILEMINISIZE * 16, _TILEMINISIZE * 12);
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 435d19df0aabdf37fbd42fb6d81ff6b5a9aece44
 	_minimapcase->alphaRender(getBackDC(), mmaprc.left - 17, mmaprc.top - 60);
 	_miniimg->alphaRender(getBackDC(), mmaprc.left, mmaprc.top, _minimappt.x, _minimappt.y, 800, 600);
 	LineMake(getBackDC(), ftemp.left, ftemp.top, ftemp.right, ftemp.top);

@@ -17,14 +17,14 @@ HRESULT gameStudy::init(void)
 	IMAGEMANAGER->addImage("mapImage", "backImage.bmp", WINSIZEX, WINSIZEY);
 
 	//씬 생성
-	SCENEMANAGER->addScene("mapTool", new mapTool);
 	SCENEMANAGER->addScene("loadingScene", new loadingScene);
 	SCENEMANAGER->addScene("titleScene", new titleScene);
+	SCENEMANAGER->addScene("mapTool", new mapTool);
 	SCENEMANAGER->addScene("gungeonScene", new gungeonScene);
-	
+
 	//현재 씬을 _sceneOne으로 설정
-	SCENEMANAGER->changeScene("mapTool");
-	
+	SCENEMANAGER->changeScene("loadingScene");
+
 	return S_OK;
 }
 

@@ -66,6 +66,22 @@ private:
 	image* _sample;						//타일 샘플 이미지
 	image* _book;						//타일 선택창 이미지
 	image* _alhpa;						//미니맵으로 사용할거 알파블랜더 테스트 이미지
+	image* _minimapcase;
+	image* _black;
+	image* _ok;
+	image* _no;
+	image* _cover;
+	image* _bigsamplecase;
+	image* _mapoption;
+	image* _bigsampleimg;
+	image* _enemysampleimg;
+	image* _roomsampleimg;
+	image* _booktag;
+	image* _scrollbardown;
+	image* _scrollbar;
+	image* _barrels;
+	image* _enemys;
+private:
 
 	tagTile _tile[TILEY][TILEX];		//타일
 	tagfakebutton _tagbutton[6];		//샘플북 태그
@@ -76,13 +92,13 @@ private:
 	POINT _start;						//드래그 영역 그릴때 처음 클릭한 좌표 저장하는 포인트 변수
 	POINT _minimappt;					//미니맵 드래그 해서 확인할용도
 	POINT _basept;
-	
+
 	RECT _dragrc;						//드래그 영역 그려줄 렉트
 	tagbigsample _bigsample[5][2];		//샘플 이미지 그려줄 RC
 	tagbigsample _enemysample[2][2];	//적군 샘플 그려줄 RC
 	tagbigsample _roomsample[2][2];		//방 샘플 그려줄 RC
 	tagbigsample _option[5];			//맵툴 옵션 버튼
-	
+
 	bool _sampleOpen;					//타일선택창 열었는지 확인
 	bool _mapOpen;						//미니맵 열었는지 확인
 	int _page;							//지금 펼치고 있는 샘플북 페이지
@@ -90,7 +106,7 @@ private:
 	float _scroolmax;					//스크롤바 최대치
 	float _currentscrool;				//스크롤바 수치
 	float _scroolpos;					//현재 스크롤바 위치
-	
+
 	camera* _cam;						//카메라아아아
 public:
 	virtual HRESULT init(void);

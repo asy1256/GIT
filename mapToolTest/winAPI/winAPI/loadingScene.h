@@ -17,4 +17,3 @@ public:
 	loadingScene();
 	virtual ~loadingScene();
 };
-

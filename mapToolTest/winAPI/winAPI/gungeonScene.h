@@ -1,13 +1,17 @@
 #pragma once
 #include "gameNode.h"
 #include "camera.h"
+#include "player.h"
 
 class gungeonScene : public gameNode
 {
 private:
 	image* _cimg;
+	image* _field;
 	image* _miniimg;
 	image* _sample;
+	image* _black;
+	image* _minimapcase;
 
 	tagTile _tile[TILEY][TILEX];
 
@@ -17,6 +21,7 @@ private:
 	bool _mapOpen;
 
 	camera* _cam;
+	player* _pl;
 
 public:
 	virtual HRESULT init(void);

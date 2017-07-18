@@ -136,7 +136,7 @@ HRESULT loading::init(void)
 {
 	gameNode::init();
 
-	_background = IMAGEMANAGER->addImage("background", "background.bmp", WINSIZEX, WINSIZEY);
+	_background = IMAGEMANAGER->addImage("background", "loadimg.bmp", WINSIZEX, WINSIZEY);
 	IMAGEMANAGER->addImage("loadingBarUp", "loadingBarUp.bmp", 500, 10);
 	IMAGEMANAGER->addImage("loadingBarDown", "loadingBarDown.bmp", 500, 10);
 

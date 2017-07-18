@@ -136,11 +136,7 @@ HRESULT loading::init(void)
 {
 	gameNode::init();
 
-<<<<<<< HEAD
 	_background = IMAGEMANAGER->addImage("background", "loadimg.bmp", WINSIZEX, WINSIZEY);
-=======
-	_background = IMAGEMANAGER->addImage("loadimg", "loadimg.bmp", WINSIZEX, WINSIZEY);
->>>>>>> 435d19df0aabdf37fbd42fb6d81ff6b5a9aece44
 	IMAGEMANAGER->addImage("loadingBarUp", "loadingBarUp.bmp", 500, 10);
 	IMAGEMANAGER->addImage("loadingBarDown", "loadingBarDown.bmp", 500, 10);
 
@@ -233,7 +229,7 @@ BOOL loading::loadNext(void)
 		return false;
 	}
 
- 	loadItem* item = _vLoadItem[_current];
+	loadItem* item = _vLoadItem[_current];
 	switch (item->getLoadingKind())
 	{
 		case LOADING_KIND_ADDIMAGE_00:

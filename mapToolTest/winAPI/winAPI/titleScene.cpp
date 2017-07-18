@@ -19,11 +19,7 @@ HRESULT titleScene::init(void)
 	{
 		_button[i] = RectMake(50, y, 100, 30);
 	}
-<<<<<<< HEAD
 
-=======
-	
->>>>>>> 435d19df0aabdf37fbd42fb6d81ff6b5a9aece44
 	return S_OK;
 }
 

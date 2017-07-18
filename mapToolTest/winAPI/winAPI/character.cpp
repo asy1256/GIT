@@ -13,6 +13,8 @@ HRESULT character::init(void)
 {
 	gameNode::init();
 
+	memset(&_ch, 0, sizeof(_ch));
+
 	return S_OK;
 }
 

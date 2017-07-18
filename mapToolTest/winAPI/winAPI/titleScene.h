@@ -3,6 +3,9 @@
 class titleScene : public gameNode
 {
 private:
+	image* _bimg;
+
+	RECT _button[3];
 	
 public:
 	virtual HRESULT init(void);

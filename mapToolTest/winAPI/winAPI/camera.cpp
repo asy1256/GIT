@@ -9,13 +9,14 @@ camera::~camera()
 {
 }
 
-HRESULT camera::init(POINT* pt, image* img, bool play)
+HRESULT camera::init(POINT* pt, player* pl, image* img, bool play)
 {
 	gameNode::init();
 
 	_pt = pt;
 	_img = img;
 	_play = play;
+	_pl = pl;
 	_rc = RectMakeCenter(_pt->x, _pt->y, WINSIZEX, WINSIZEY);
 
 	return S_OK;
@@ -29,7 +30,15 @@ void camera::release(void)
 void camera::update(void)
 {
 	gameNode::update();
-	_rc = RectMakeCenter(_pt->x, _pt->y, WINSIZEX, WINSIZEY);
+
+	if (!_play)
+	{
+		_rc = RectMakeCenter(_pt->x, _pt->y, WINSIZEX, WINSIZEY);
+	}
+	else
+	{
+		_rc = RectMakeCenter(_pl->getCharacterData().x, _pl->getCharacterData().y, WINSIZEX, WINSIZEY);
+	}
 
 	if (_rc.left < 0)
 	{

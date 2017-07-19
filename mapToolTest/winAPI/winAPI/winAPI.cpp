@@ -7,10 +7,12 @@
 HINSTANCE _hInstance;
 HWND _hWnd;
 POINT _ptMouse;
+POINT _mouse, _ptadd;
 bool _leftButtonDown;
 bool _wheelUp;
 bool _wheelDown;
 int _TILEMINISIZE = 4;
+tagTile _Tile[TILEY][TILEX];
 
 gameStudy _gs;
 

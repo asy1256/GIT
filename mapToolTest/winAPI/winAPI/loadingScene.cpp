@@ -37,7 +37,21 @@ HRESULT loadingScene::init(void)
 	_loading->loadImage("scrollbar", "scrollbar.bmp", 14, 68, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("barrels", "barrels.bmp", 128, 96, 2, 1, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("enemys", "enemys.bmp", 192, 256, 2, 2, true, RGB(255, 0, 255));
-	_loading->loadFrameImage("Player", "Player.bmp", 1008, 640, 16, 8, true, RGB(255, 0, 255));
+
+	//인게임에서 사용할 캐릭터들과 오브젝트 및 총기 이미지 등등
+	_loading->loadFrameImage("marin", "Player.bmp", 1008, 640, 16, 8, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("kin", "bullet_kin.bmp", 448, 384, 7, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("bandana", "bullet_bandana.bmp", 448, 384, 7, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("red", "shotgun_red.bmp", 448, 512, 7, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("mPistol", "m_pistol.bmp", 128, 20, 4, 1, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("kPistol", "k_pistol.bmp", 102, 32, 3, 1, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("bPistol", "b_pistol.bmp", 200, 32, 4, 1, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("wTable", "w_table.bmp", 1008, 408, 12, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("hTable", "h_table.bmp", 1248, 440, 12, 4, true , RGB(255,0,255));
+	_loading->loadFrameImage("wDoor", "w_door.bmp", 432, 384, 4, 2, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("hDoor", "h_door.bmp", 512, 318, 4, 2, true, RGB(255, 0, 255));
+	_loading->loadImage("pBullet", "playerbullet.bmp", 18, 18, true, RGB(255,0,255));
+	_loading->loadImage("eBullet", "enemybullet.bmp", 12, 12, true, RGB(255, 0, 255));
 
 	return S_OK;
 }

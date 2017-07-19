@@ -603,3 +603,5 @@ void image::alphaRender(HDC hdc, int destX, int destY, int sourX, int sourY, int
 		//bitblt DC간의 영역끼리 서로 고속복사를 해준다
 	}
 }
+
+//앵글렌더

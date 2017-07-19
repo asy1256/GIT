@@ -1220,6 +1220,8 @@ void mapTool::tiledraw(void)
 								_tile[y + 2][x].objframeX = 10;
 								_tile[y + 2][x].objframeY = 6;
 								_tile[y + 2][x].obj = DOOR_WIDTH;
+								if (x == sx + 1) { _tile[y + 2][x].roomnum = _tile[y + 2][x - 1].roomnum; }
+								else { _tile[y + 2][x].roomnum = _tile[y + 2][x + 1].roomnum; }
 							}
 						}
 					}

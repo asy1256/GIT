@@ -3,9 +3,11 @@
 
 struct tagCharacter
 {
-	int frameX, frameY;
-	float x, y;
-	RECT rc;
+	int frameX, frameY, framecount;
+	int gframeX, gframecount;
+	int idX, idY;
+	float x, y, angle;
+	RECT rc, crc, grc;
 	image* img;
 	image* gun;
 };

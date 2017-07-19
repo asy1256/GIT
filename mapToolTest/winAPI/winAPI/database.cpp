@@ -102,6 +102,3 @@ int database::getElementDataMaxHP(string str)
 {
 	return _mTotalElement.find(str)->second->maxHP;
 }
-
-
-

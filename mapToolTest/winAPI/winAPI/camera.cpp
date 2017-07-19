@@ -37,7 +37,9 @@ void camera::update(void)
 	}
 	else
 	{
-		_rc = RectMakeCenter(_pl->getCharacterData().x, _pl->getCharacterData().y, WINSIZEX, WINSIZEY);
+		float wdistance = (_pl->getCharacterData().x - _mouse.x);
+		float hdistance = (_pl->getCharacterData().y - _mouse.y);
+		_rc = RectMakeCenter(_pl->getCharacterData().x - wdistance, _pl->getCharacterData().y - hdistance, WINSIZEX, WINSIZEY);
 	}
 
 	if (_rc.left < 0)

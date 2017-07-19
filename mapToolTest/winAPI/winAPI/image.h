@@ -102,6 +102,9 @@ public:
 	void alphaRender(HDC hdc, int destX, int destY);
 	void alphaRender(HDC hdc, int destX, int destY, int sourX, int sourY, int sourWidth, int sourHeight);
 
+	//¾Þ±Û·»´õ
+
+
 	//ÁÂÇ¥ X
 	inline void setX(float x) {_imageInfo->x = x;}
 	inline float getX(void) {return _imageInfo->x;}

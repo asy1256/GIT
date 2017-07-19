@@ -88,7 +88,7 @@ private:
 	drawtype _nowdraw;					//선택한 타일 드로우 방식
 	selecttilekind _nowselecct;			//현재 선택한 타일
 
-	POINT _campt, _mouse, _ptadd;		//카메라 이동에 의한 마우스 좌표동기화에 필요한 포인트 변수
+	POINT _campt;						//카메라 이동에 의한 마우스 좌표동기화에 필요한 포인트 변수
 	POINT _start;						//드래그 영역 그릴때 처음 클릭한 좌표 저장하는 포인트 변수
 	POINT _minimappt;					//미니맵 드래그 해서 확인할용도
 	POINT _basept;

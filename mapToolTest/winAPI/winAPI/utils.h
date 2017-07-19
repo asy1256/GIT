@@ -23,6 +23,9 @@
 #define FLOAT_EQUAL(f1, f2) (fabs(f1 - f2) <= FLOAT_EPSILON)
 //fabs는 소수점의 차 절대값을 반환하는 함수이다.
 
+//라디안 값을 디그리 값으로 변환
+#define RADIAN_TO_DEGREE(f1) static_cast<int>(f1 * (180 / PI))
+
 namespace MY_UTIL
 {
 	//거리 구한다
@@ -30,4 +33,7 @@ namespace MY_UTIL
 	
 	//시작점부터 끝 점까지의 각을 라디안으로 구한다
 	float getAngle(float startX, float startY, float endX, float endY);
+
+	//시작점부터 끝 점까지의 각을 디그리로 구한다
+	int getAngleDegree(float startX, float startY, float endX, float endY);
 }

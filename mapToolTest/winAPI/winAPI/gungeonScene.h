@@ -1,7 +1,8 @@
 #pragma once
 #include "gameNode.h"
 #include "camera.h"
-#include "player.h"
+#include "characterManager.h"
+#include "objectManager.h"
 
 class gungeonScene : public gameNode
 {
@@ -15,13 +16,14 @@ private:
 
 	tagTile _tile[TILEY][TILEX];
 
-	POINT _campt, _mouse, _ptadd;
+	POINT _campt;
 	POINT _minimappt, _basept;
 
 	bool _mapOpen;
 
 	camera* _cam;
-	player* _pl;
+	characterManager* _cm;
+	objectManager* _om;
 
 public:
 	virtual HRESULT init(void);
@@ -32,6 +34,7 @@ public:
 
 	virtual void setup(void);
 	virtual void keycontrol(void);
+	virtual void mousemove(void);
 	virtual void draw(void);
 	virtual void minimap(void);
 

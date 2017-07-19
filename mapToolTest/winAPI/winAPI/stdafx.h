@@ -26,6 +26,7 @@
 //WBCS (Wide Byte Character Set) ->
 //모든 문자열을 2바이트로 처리한다.. 유니코드 기반..
 
+#include "globalData.h"
 #include "commonMacroFunction.h"
 #include "randomFunction.h"
 #include "keyManager.h"
@@ -76,12 +77,12 @@ using namespace MY_UTIL;
 extern HINSTANCE	_hInstance; //프로그램 인스턴스
 extern HWND			_hWnd;		//윈도우 핸들
 extern POINT		_ptMouse;	//마우스
+extern POINT		_mouse, _ptadd;
 extern bool			_leftButtonDown;
 extern bool			_wheelUp;
 extern bool			_wheelDown;
 extern int			_TILEMINISIZE;
+extern tagTile		_Tile[TILEY][TILEX];
 
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
-
-#include "globalData.h"

@@ -596,16 +596,16 @@ void mapTool::tiledraw(void)
 					//각 모서리
 					if (y == startY && x == startX)//왼쪽위
 					{
-						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 7 : 4;
-						_tile[y][x].wallY = 0;
-						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 7 : 4;
+						_tile[y][x].objframeY = 0;
+						_tile[y][x].obj = WALL_TOP;
 						continue;
 					}
 					if (y == startY && x == endX)//오른쪽위
 					{
-						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 9 : 6;
-						_tile[y][x].wallY = 0;
-						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 9 : 6;
+						_tile[y][x].objframeY = 0;
+						_tile[y][x].obj = WALL_TOP;
 						continue;
 					}
 					if (y == endY - 2 && x == startX)//왼쪽아래
@@ -627,9 +627,9 @@ void mapTool::tiledraw(void)
 					//사변
 					if (y == startY)//위
 					{
-						_tile[y][x].wallX = (_nowselecct == S_WALL) ? 8 : 5;
-						_tile[y][x].wallY = 0;
-						_tile[y][x].wall = (_nowselecct == S_WALL) ? STON_WALL : BOOK_WALL;
+						_tile[y][x].objframeX = (_nowselecct == S_WALL) ? 8 : 5;
+						_tile[y][x].objframeY = 0;
+						_tile[y][x].obj = WALL_TOP;
 					}
 					else if (y == endY - 2)//아래
 					{
@@ -917,6 +917,9 @@ void mapTool::tiledraw(void)
 				sy = ey = _start.y; sx = ex = _start.x;
 				if (_tile[sy - 1][sx].roomnum == 0 || _tile[sy + 2][sx].roomnum == 0) //위또는 아래로 만들자
 				{
+					bool UorD = false; //flase는 아래쪽
+					UorD = (_tile[sy - 1][sx].roomnum == 0) ? true : false;
+
 					if (_tile[sy - 1][sx].roomnum == 0)
 					{
 						while (_tile[sy - 1][sx].roomnum == 0) { if (sy - 1 == 0) { makeok = false; break; } --sy; }
@@ -936,6 +939,9 @@ void mapTool::tiledraw(void)
 					{
 						for (int x = sx; x < ex; ++x)
 						{
+							//통로에 방번호 지정
+							if (UorD) { _tile[y][x].roomnum = _tile[ey - 1][sx].roomnum; }
+							else { _tile[y][x].roomnum = _tile[sy][sx].roomnum; }
 							//각 모서리
 							if (y == sy && x == sx)//왼쪽위
 							{
@@ -1081,9 +1087,23 @@ void mapTool::tiledraw(void)
 							}
 						}
 					}
+
+					if (UorD)
+					{
+						_tile[sy + 1][sx + 1].roomnum = _tile[sy - 1][sx].roomnum;
+						_tile[ey - 1][sx + 1].roomnum = _tile[ey][sx].roomnum;
+					}
+					else
+					{
+						_tile[sy + 1][sx + 1].roomnum = _tile[sy][sx].roomnum;
+						_tile[ey - 1][sx + 1].roomnum = _tile[ey][sx].roomnum;
+					}					
 				}
 				if (_tile[sy][sx - 1].roomnum == 0 || _tile[sy][sx + 1].roomnum == 0) //왼쪽이나 오른쪽으로 만들자
 				{
+					bool LorR = false; //flase 는 오른쪽
+					LorR = (_tile[sy][sx - 1].roomnum == 0) ? true : false;
+
 					if (_tile[sy][sx - 1].roomnum == 0)
 					{
 						while (_tile[sy][sx - 1].roomnum == 0) { if (sx - 1 <= 0) { makeok = false; break; } --sx; }
@@ -1096,13 +1116,16 @@ void mapTool::tiledraw(void)
 						ex += 2;
 					}
 					if (!makeok) { return; }
-					ey += 5;
+					ey += 5;					
 
 					//그려봅시다
 					for (int y = sy; y < ey; ++y)
 					{
 						for (int x = sx; x < ex; ++x)
 						{
+							//통로에 방번호 주기
+							if (LorR) { _tile[y][x].roomnum = _tile[sy][ex - 1].roomnum; }
+							else { _tile[y][x].roomnum = _tile[sy][sx].roomnum; }
 							//각 모서리
 							if (y == sy && x == sx)//왼쪽위
 							{
@@ -1120,16 +1143,16 @@ void mapTool::tiledraw(void)
 							}
 							if (y == ey - 1 && x == sx)//왼쪽아래
 							{
-								_tile[y][x].wallX = (_tile[y][x].wall == STON_WALL) ? 7 : 4;
-								_tile[y][x].wallY = 0;
-								_tile[y][x].wall = (_tile[y][x].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].objframeX = (_tile[y][x].wall == STON_WALL) ? 7 : 4;
+								_tile[y][x].objframeY = 0;
+								_tile[y][x].obj = WALL_TOP;
 								continue;
 							}
 							if (y == ey - 1 && x == ex - 1)//오른쪽아래
 							{
-								_tile[y][x].wallX = (_tile[y][x].wall == STON_WALL) ? 9 : 6;
-								_tile[y][x].wallY = 0;
-								_tile[y][x].wall = (_tile[y][x].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].objframeX = (_tile[y][x].wall == STON_WALL) ? 9 : 6;
+								_tile[y][x].objframeY = 0;
+								_tile[y][x].obj = WALL_TOP;
 								continue;
 							}
 							//사변
@@ -1176,9 +1199,9 @@ void mapTool::tiledraw(void)
 							}
 							else if (y == ey - 1)//아래
 							{
-								_tile[y][x].wallX = (_tile[y][ex - 1].wall == STON_WALL) ? 8 : 5;
-								_tile[y][x].wallY = 0;
-								_tile[y][x].wall = (_tile[y][ex - 1].wall == STON_WALL) ? STON_WALL : BOOK_WALL;
+								_tile[y][x].objframeX = (_tile[y][ex - 1].wall == STON_WALL) ? 8 : 5;
+								_tile[y][x].objframeY = 0;
+								_tile[y][x].obj = WALL_TOP;
 								_tile[y][x].pass = true;
 								_tile[y + 1][x].wallX = 5;
 								_tile[y + 1][x].wallY = 1;
@@ -1220,10 +1243,19 @@ void mapTool::tiledraw(void)
 								_tile[y + 2][x].objframeX = 10;
 								_tile[y + 2][x].objframeY = 6;
 								_tile[y + 2][x].obj = DOOR_WIDTH;
-								if (x == sx + 1) { _tile[y + 2][x].roomnum = _tile[y + 2][x - 1].roomnum; }
-								else { _tile[y + 2][x].roomnum = _tile[y + 2][x + 1].roomnum; }
 							}
 						}
+					}
+
+					if (LorR)
+					{
+						_tile[sy + 3][sx + 1].roomnum = _tile[sy + 3][sx - 1].roomnum;
+						_tile[sy + 3][ex - 2].roomnum = _tile[sy + 3][ex].roomnum;
+					}
+					else
+					{
+						_tile[sy + 3][sx + 1].roomnum = _tile[sy + 3][sx].roomnum;
+						_tile[sy + 3][ex - 2].roomnum = _tile[sy + 3][ex].roomnum;
 					}
 				}
 			}

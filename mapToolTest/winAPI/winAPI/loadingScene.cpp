@@ -50,8 +50,12 @@ HRESULT loadingScene::init(void)
 	_loading->loadFrameImage("hTable", "h_table.bmp", 1248, 440, 12, 4, true , RGB(255,0,255));
 	_loading->loadFrameImage("wDoor", "w_door.bmp", 432, 384, 4, 2, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("hDoor", "h_door.bmp", 512, 318, 4, 2, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("sheel", "sheel.bmp", 56, 40, 2, 2, true, RGB(255, 0, 255));
 	_loading->loadImage("pBullet", "playerbullet.bmp", 18, 18, true, RGB(255,0,255));
 	_loading->loadImage("eBullet", "enemybullet.bmp", 12, 12, true, RGB(255, 0, 255));
+	_loading->loadImage("weapon", "weapon.bmp", 172, 152, true, RGB(255, 0, 255));
+	_loading->loadImage("reloading", "reloading.bmp", 96, 21, true, RGB(255, 0, 255));
+	_loading->loadImage("reloadingbar", "reloadingbar.bmp", 3, 21, true, RGB(255, 0, 255));
 
 	return S_OK;
 }

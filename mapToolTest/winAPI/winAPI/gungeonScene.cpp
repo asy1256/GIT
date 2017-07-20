@@ -38,7 +38,13 @@ void gungeonScene::update(void)
 	keycontrol();
 	_cm->update();
 	_om->update();
+	objectColision();
 	_cam->update();
+
+	for (int y = _cam->getRC().bottom - 30, i = 0; i < 12; ++i, y -= _sheel->getFrameHeight())
+	{
+		_sheelrc[i] = RectMakeCenter(_cam->getRC().right - _sheel->getFrameWidth() / 2, y, _sheel->getFrameWidth(), _sheel->getFrameHeight());
+	}
 }
 
 void gungeonScene::render(void)
@@ -60,19 +66,6 @@ void gungeonScene::setup(void)
 		ReadFile(file, _Tile, sizeof(tagTile) * TILEX * TILEY, &read, NULL);
 		CloseHandle(file);
 	}
-
-	for (int y = 0; y < TILEY; ++y)
-	{
-		for (int x = 0; x < TILEX; ++x)
-		{
-			if (_Tile[y][x].obj != NONE)
-			{
-
-				_Tile[y][x].show = true;
-
-			}
-		}
-	}
 	//변수 초기화
 	{
 		_campt.x = DATABASE->pstartx * TILESIZE;
@@ -92,6 +85,8 @@ void gungeonScene::setup(void)
 		_sample = IMAGEMANAGER->findImage("tile");
 		_black = IMAGEMANAGER->findImage("black");
 		_minimapcase = IMAGEMANAGER->findImage("minimapcase");
+		_weaponcase = IMAGEMANAGER->findImage("weapon");
+		_sheel = IMAGEMANAGER->findImage("sheel");
 	}
 
 	_cm = new characterManager;
@@ -102,6 +97,12 @@ void gungeonScene::setup(void)
 
 	_cam = new camera;
 	_cam->init(&_campt, _cm->getPlayer(), _cimg, true);
+
+	//현재총 렉트 그리자
+	for (int y = _cam->getRC().bottom - 30, i = 0; i < 12; ++i, y -= _sheel->getFrameHeight())
+	{
+		_sheelrc[i] = RectMakeCenter(_cam->getRC().right - _sheel->getFrameWidth() / 2, y, _sheel->getFrameWidth(), _sheel->getFrameHeight());
+	}
 
 	//바닥
 	for (int y = 0; y < TILEY; ++y)
@@ -173,6 +174,21 @@ void gungeonScene::draw(void)
 		}
 	}
 
+	//현재총알 그려 그려
+	_weaponcase->render(getBackDC(), _cam->getRC().right - _sheel->getFrameWidth() - _weaponcase->getWidth(),
+		_cam->getRC().bottom - _sheel->getFrameHeight() / 2 - _weaponcase->getHeight());
+
+	for (int i = 0; i < 12; ++i)
+	{
+		if (i == 0) { _sheel->frameRender(getBackDC(), _sheelrc[i].left, _sheelrc[i].top, 1, 1); }
+		else if (i == 11) { _sheel->frameRender(getBackDC(), _sheelrc[i].left, _sheelrc[i].top, 0, 1); }
+		else
+		{
+			if (i <= _cm->getPlayer()->getammo()) { _sheel->frameRender(getBackDC(), _sheelrc[i].left, _sheelrc[i].top, 1, 0); }
+			else { _sheel->frameRender(getBackDC(), _sheelrc[i].left, _sheelrc[i].top, 0, 0); }
+		}
+	}
+
 	//테스트
 	sprintf(str, "X좌표 : %f Y좌표 : %f", _cm->getPlayer()->getCharacterData().x, _cm->getPlayer()->getCharacterData().y);
 	TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top, str, strlen(str));
@@ -195,13 +211,13 @@ void gungeonScene::minimap(void)
 		for (int x = 0; x < TILEX; ++x)
 		{
 			if (!_Tile[y][x].show) { continue; }
-			if (_Tile[y][x].terrain != EMPTY)
-			{
-				FillRect(_miniimg->getMemDC(), &_Tile[y][x].minirc, bluebrush);
-			}
 			if (_tile[y][x].wall != VOID_WALL)
 			{
 				FillRect(_miniimg->getMemDC(), &_Tile[y][x].minirc, withebrush);
+			}
+			if (_Tile[y][x].terrain != EMPTY)
+			{
+				FillRect(_miniimg->getMemDC(), &_Tile[y][x].minirc, bluebrush);
 			}
 		}
 	}

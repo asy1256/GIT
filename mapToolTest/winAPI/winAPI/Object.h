@@ -15,11 +15,23 @@ class Object : public gameNode
 protected:
 	tagObject _ob;
 
+	int _roomnum;
+	bool _action;
+	bool _open;
+	bool _sight;
+
 public:
 	virtual HRESULT init(float x, float y, OBJECT type, int roomnum);
+	virtual HRESULT init(float x, float y, OBJECT type);
 	virtual void release(void);
 	virtual void update(void);
 	virtual void render(HDC hdc);
+
+	virtual tagObject &getObjectData(void) { return _ob; }
+
+	virtual bool &getAction(void) { return _action; }
+	virtual bool &getOpen(void) { return _open; }
+	virtual RECT &getTrc(void) { return RectMake(0,0,0,0); }
 
 	Object();
 	virtual ~Object();

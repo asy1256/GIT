@@ -18,6 +18,15 @@ HRESULT Object::init(float x, float y, OBJECT type, int roomnum)
 	return S_OK;
 }
 
+HRESULT Object::init(float x, float y, OBJECT type)
+{
+	gameNode::init();
+
+	memset(&_ob, 0, sizeof(_ob));
+
+	return S_OK;
+}
+
 void Object::release(void)
 {
 	gameNode::release();

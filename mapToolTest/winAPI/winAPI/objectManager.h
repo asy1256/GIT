@@ -18,6 +18,8 @@ public:
 	virtual void render(HDC hdc);
 
 	virtual void setup(void);
+	
+	inline vector<Object*> &getObjectvector(void) { return _vObject; }
 
 	objectManager();
 	virtual ~objectManager();

@@ -11,14 +11,23 @@ table::~table()
 
 HRESULT table::init(float x, float y, OBJECT type)
 {
+	Object::init(x, y, type);
 	_action = _stand = false;
 	_hp = 14;
 
-	_ob.x = x;
-	_ob.y = y;
 	_ob.type = type;
-	if (_ob.type == TABLE_WIDTH) { _ob.img = IMAGEMANAGER->findImage("wTable"); }
-	else if (_ob.type == TABLE_LENGTH) { _ob.img = IMAGEMANAGER->findImage("hTable"); }
+	_ob.x = x;
+
+	if (_ob.type == TABLE_WIDTH)
+	{
+		_ob.img = IMAGEMANAGER->findImage("wTable");
+		_ob.y = y;
+	}
+	else if (_ob.type == TABLE_LENGTH)
+	{
+		_ob.img = IMAGEMANAGER->findImage("hTable");
+		_ob.y = y - TILESIZE;
+	}
 
 
 	return S_OK;

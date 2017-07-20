@@ -31,6 +31,11 @@ void objectManager::update(void)
 {
 	gameNode::update();
 
+	for (int i = 0; i < _vObject.size(); ++i)
+	{
+		_vObject[i]->update();
+	}
+
 }
 
 void objectManager::render(HDC hdc)

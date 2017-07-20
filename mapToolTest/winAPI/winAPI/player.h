@@ -21,9 +21,15 @@ private:
 private:
 	direction _direc;
 	int _baseframeX, _baseframeY;
-	int _degree;
-	bool _dodge, _move, _fire;
+	int _degree, _ammo;
+	float _reloadtime, _currentreloadtime, _nowloading;
+	bool _dodge, _move, _fire, _reload;
 	bool _right, _up, _left, _down;
+
+	image* _reloadgage;
+	image* _reloadbar;
+
+	RECT _reloadingbar;
 
 	bullet* _bullet;
 
@@ -41,6 +47,7 @@ public:
 	virtual void lol(void);
 
 	inline tagCharacter &getCharacterData(void) { return _ch; }
+	virtual int &getammo(void) { return _ammo; }
 
 	player();
 	virtual ~player();

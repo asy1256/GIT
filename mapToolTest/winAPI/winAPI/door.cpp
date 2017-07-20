@@ -19,17 +19,23 @@ HRESULT door::init(float x, float y, OBJECT type, int roomnum)
 	_ob.x = x;
 	if (_ob.type == DOOR_WIDTH)
 	{
-		_ob.img = IMAGEMANAGER->findImage("wDoor"); _ob.y = y;
+		_ob.img = IMAGEMANAGER->findImage("wDoor");
+		_ob.y = y - _ob.img->getFrameHeight() + TILESIZE;
 		_ob.rc = RectMake(_ob.x, _ob.y, _ob.img->getFrameWidth(), _ob.img->getFrameHeight());
+		_ob.crc = RectMake(_ob.x + 50, _ob.y, 20, _ob.img->getFrameHeight());
 	}
 	else if (_ob.type == DOOR_LENGTH)
 	{
 		_ob.img = IMAGEMANAGER->findImage("hDoor");
-		_ob.y = y - _ob.img->getFrameHeight();
-		_ob.rc = RectMake(_ob.x - _ob.img->getFrameWidth() / 2, _ob.y, _ob.img->getFrameWidth(), _ob.img->getFrameHeight());
+		_ob.y = y;
+		_ob.rc = RectMake(_ob.x, _ob.y, _ob.img->getFrameWidth(), _ob.img->getFrameHeight());
+		_ob.crc = RectMake(_ob.x, _ob.rc.bottom - 50, _ob.img->getFrameWidth(), 20);
 	}
-	_ob.crc = RectMake(_ob.x - 10, _ob.y, 20, _ob.img->getFrameHeight());
 
+	Object *table = new Table;
+
+	Table *pTable = (Table *)table;
+	pTable->
 	return S_OK;
 }
 
@@ -48,9 +54,6 @@ void door::update(void)
 			++_ob.frameX;
 			if (_ob.frameX >= 4)
 			{
-				_ob.frameX = 3;
-				_action = false;
-				_open = true;
 				if (!_sight)
 				{
 					_sight = true;
@@ -63,6 +66,9 @@ void door::update(void)
 						}
 					}
 				}
+				_ob.frameX = 3;
+				_action = false;
+				_open = true;
 			}
 		}
 	}

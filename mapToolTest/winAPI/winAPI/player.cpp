@@ -17,8 +17,15 @@ HRESULT player::init(float x, float y)
 	_dodge = false;
 	_move = false;
 	_fire = false;
+	_reload = false;
 	_right = _up = _left = _down = false;
 	_direc = DOWN;
+	_ammo = 10;
+	_currentreloadtime = 0;
+	_reloadtime = 60;
+
+	_reloadgage = IMAGEMANAGER->findImage("reloading");
+	_reloadbar = IMAGEMANAGER->findImage("reloadingbar");
 
 	_ch.x = x;
 	_ch.y = y;
@@ -29,6 +36,9 @@ HRESULT player::init(float x, float y)
 	_ch.grc = RectMakeCenter(_ch.rc.right, _ch.y, _ch.gun->getFrameWidth(), _ch.gun->getFrameHeight());
 	_ch.idX = _ch.x / TILESIZE;
 	_ch.idY = _ch.crc.top + 10 / TILESIZE;
+
+	_reloadingbar = RectMakeCenter(_ch.x, _ch.rc.top - _reloadgage->getHeight(), _reloadgage->getWidth(), _reloadgage->getHeight());
+	_nowloading = (_currentreloadtime / _reloadtime) * _reloadgage->getWidth();
 
 	_bullet = new bullet;
 	_bullet->init(800);
@@ -64,11 +74,22 @@ void player::update(void)
 	}
 	_ch.idX = _ch.x / TILESIZE;
 	_ch.idY = _ch.crc.top + 10 / TILESIZE;
+
+	if (_reload)
+	{
+		_reloadingbar = RectMakeCenter(_ch.x, _ch.rc.top - _reloadgage->getHeight(), _reloadgage->getWidth(), _reloadgage->getHeight());
+		_nowloading = (_currentreloadtime / _reloadtime) * _reloadgage->getWidth();
+	}
 }
 
 void player::render(HDC hdc)
 {
-	_ch.gun->frameRender(hdc, _ch.grc.left, _ch.grc.top, _ch.gframeX, 0);
+	if (!_dodge) { _ch.gun->frameRender(hdc, _ch.grc.left, _ch.grc.top, _ch.gframeX, 0); }
+	if (_reload)
+	{
+		_reloadgage->render(hdc, _reloadingbar.left, _reloadingbar.top);
+		_reloadbar->render(hdc, _reloadingbar.left + _nowloading, _reloadingbar.top);
+	}
 	_ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, _ch.frameY);
 	_bullet->render(hdc);
 }
@@ -118,9 +139,14 @@ void player::keycontrol(void)
 
 	if (!_right && !_up && !_left && !_down) { _move = false; }
 
+	if (KEYMANAGER->isOnceKeyDown('R'))
+	{
+		if (_ammo != 10 && !_reload) { _reload = true; }
+	}
+
 	if (KEYMANAGER->isStayKeyDown(VK_LBUTTON))
 	{
-		if (!_dodge) { _fire = true; }
+		if (!_dodge && _ammo > 0) { _fire = true; }
 	}
 	
 	if (KEYMANAGER->isOnceKeyDown(VK_RBUTTON))
@@ -212,16 +238,27 @@ void player::angleup(void)
 void player::frameup(void)
 {
 	if (_ch.frameX < _baseframeX && !_dodge) { _ch.frameX = _baseframeX; }
-	if (_fire)
+	if (_reload)
+	{
+		++_currentreloadtime;
+		if (_currentreloadtime >= _reloadtime)
+		{
+			_currentreloadtime = 0;
+			_reload = false;
+			_ammo = 10;
+		}
+	}
+	if (_fire && !_dodge)
 	{
 		++_ch.gframecount;
-		if (_ch.gframecount >= 8)
+		if (_ch.gframecount >= 5)
 		{
 			++_ch.gframeX;
 			_ch.gframecount = 0;
 			if (_ch.gframeX >= 4)
 			{
 				_ch.gframeX = 0;
+				--_ammo;
 				_fire = false;
 				_bullet->fire(_ch.x, _ch.y, _ch.angle);
 			}

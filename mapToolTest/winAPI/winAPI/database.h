@@ -31,9 +31,10 @@ private:
 	arrElement _mTotalElement;
 
 public:
-
 	int pstarty = 0;
 	int pstartx = 0;
+
+
 public:
 	HRESULT init(void);
 	void release(void);

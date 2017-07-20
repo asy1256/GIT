@@ -13,8 +13,12 @@ private:
 	image* _sample;
 	image* _black;
 	image* _minimapcase;
+	image* _weaponcase;
+	image* _sheel;
 
 	tagTile _tile[TILEY][TILEX];
+
+	RECT _sheelrc[12];
 
 	POINT _campt;
 	POINT _minimappt, _basept;
@@ -38,7 +42,8 @@ public:
 	virtual void draw(void);
 	virtual void minimap(void);
 
+	virtual void objectColision(void);
+
 	gungeonScene();
 	virtual ~gungeonScene();
 };
-

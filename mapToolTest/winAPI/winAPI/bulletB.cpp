@@ -26,7 +26,7 @@ void bulletB::update(void)
 	character::update();
 }
 
-void bulletB::render(void)
+void bulletB::render(HDC hdc)
 {
 
 }

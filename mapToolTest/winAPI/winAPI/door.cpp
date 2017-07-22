@@ -32,10 +32,6 @@ HRESULT door::init(float x, float y, OBJECT type, int roomnum)
 		_ob.crc = RectMake(_ob.x, _ob.rc.bottom - 50, _ob.img->getFrameWidth(), 20);
 	}
 
-	Object *table = new Table;
-
-	Table *pTable = (Table *)table;
-	pTable->
 	return S_OK;
 }
 

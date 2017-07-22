@@ -5,19 +5,27 @@
 class table : public Object
 {
 private:
-	bool _action;
-	bool _stand;
-	int _hp;
+	struct tagTabledata
+	{
+		bool action;
+		bool stand;
+		bool left, right, up, down;
+		int hp;
 
-	RECT _hrc;
+		RECT hrc;
+	};
+
+private:
+	tagTabledata _tb;
 
 public:
 	virtual HRESULT init(float x, float y, OBJECT type);
 	virtual void release(void);
 	virtual void update(void);
-	virtual void render(void);
+	virtual void render(HDC hdc);
 
-	virtual RECT &getTrc(void) { return _hrc; }
+	virtual tagObject &getObjectData(void) { return _ob; }
+	virtual tagTabledata &getTableData(void) { return _tb; }
 
 	table();
 	virtual ~table();

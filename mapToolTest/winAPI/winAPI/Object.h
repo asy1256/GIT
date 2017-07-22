@@ -31,7 +31,6 @@ public:
 
 	virtual bool &getAction(void) { return _action; }
 	virtual bool &getOpen(void) { return _open; }
-	virtual RECT &getTrc(void) { return RectMake(0,0,0,0); }
 
 	Object();
 	virtual ~Object();

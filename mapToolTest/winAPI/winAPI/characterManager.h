@@ -1,16 +1,21 @@
 #pragma once
 
 #include "gameNode.h"
+#include "bulletK.h"
+#include "bulletB.h"
+#include "shotgunR.h"
 #include "player.h"
 #include "bullets.h"
 
 class characterManager : public gameNode
 {
 private:
-	vector<gameNode*> _anything;
+	vector<character*> _vCharacter;
+	vector<character*>::iterator _viCharacter;
 	bulletE* _ebullet;
 
 	player* _pl;
+	character* _temp;
 
 public:
 	virtual HRESULT init(float x, float y);

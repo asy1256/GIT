@@ -59,19 +59,6 @@ void bullet::fire(float x, float y, float angle)
 
 void bullet::move(void)
 {
-	/*for (int i = 0; i < _vBullet.size(); ++i)
-	{
-		if (_vBullet[i].fire) { _vBullet[i].x += cosf(_vBullet[i].angle) * _vBullet[i].speed; }
-		else { ++_vBullet[i].count; }
-		_vBullet[i].rc = RectMakeCenter(_vBullet[i].x, _vBullet[i].y, _vBullet[i].img->getFrameWidth(), _vBullet[i].img->getFrameHeight());
-
-		if (_range < getDistance(_vBullet[i].fireX, _vBullet[i].fireY, _vBullet[i].x, _vBullet[i].y) && _vBullet[i].fire)
-		{
-			_vBullet[i].fire = false;
-		}
-		if (!_vBullet[i].fire && _vBullet[i].count == 20) { _vBullet.erase(_vBullet.begin() + i); break; }
-	}*/
-
 	for (_viBullet = _vBullet.begin(); _viBullet != _vBullet.end();)
 	{
 		_viBullet->x += cosf(_viBullet->angle) * _viBullet->speed;

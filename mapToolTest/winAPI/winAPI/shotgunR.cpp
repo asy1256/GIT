@@ -26,7 +26,7 @@ void shotgunR::update(void)
 	character::update();
 }
 
-void shotgunR::render(void)
+void shotgunR::render(HDC hdc)
 {
 
 }

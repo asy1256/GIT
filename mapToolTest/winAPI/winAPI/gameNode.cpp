@@ -33,6 +33,7 @@ HRESULT gameNode::init(bool mangerInit) //init, setup, create...
 		SOUNDMANAGER->init();		//사운드매니져 셋팅
 		KEYANIMANAGER->init();		//키애니 매니져 셋팅
 		INIMANAGER->init();			//ini 매니져 셋팅
+		ASTAR->init();				//ASTAR 셋팅
 	}
 
 	return S_OK;
@@ -84,6 +85,10 @@ void gameNode::release(void)
 		//ini매니져 해제
 		INIMANAGER->release();
 		INIMANAGER->releaseSingleton();
+
+		//ASTAR 해제
+		ASTAR->release();
+		ASTAR->releaseSingleton();
 	}
 
 	ReleaseDC(_hWnd, _hdc);

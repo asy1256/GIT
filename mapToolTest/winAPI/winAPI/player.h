@@ -46,7 +46,7 @@ public:
 	virtual void colision(void);
 	virtual void lol(void);
 
-	inline tagCharacter &getCharacterData(void) { return _ch; }
+	virtual tagCharacter &getCharacterData(void) { return _ch; }
 	virtual int &getammo(void) { return _ammo; }
 
 	player();

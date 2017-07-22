@@ -19,6 +19,7 @@
 //printf, scanf, puts, gets.. 등등
 #include <tchar.h> //윈도우에서 사용할 문자열 출력 헤더 인클루드
 //TextOut, DrawText, wsprintf..등등..
+#include <algorithm>
 
 //프로젝트는 기본적으로 유니코드임. 영어, 한글 모두 2바이트...
 //MBCS (Multi Byte Character Set) -> 
@@ -40,6 +41,7 @@
 #include "soundManager.h"
 #include "keyAnimationManager.h"
 #include "iniDataManager.h"
+#include "aStar.h"
 
 //================================================
 //############### 2017.03.20 디파인 ###############
@@ -70,6 +72,7 @@ using namespace MY_UTIL;
 #define SOUNDMANAGER soundManager::getSingleton()
 #define KEYANIMANAGER keyAnimationManager::getSingleton()
 #define INIMANAGER iniDataManager::getSingleton()
+#define ASTAR aStar::getSingleton()
 
 //================================================
 //############### 2017.03.20 전역변수 ###############

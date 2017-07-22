@@ -37,8 +37,8 @@ void camera::update(void)
 	}
 	else
 	{
-		float wdistance = (_pl->getCharacterData().x - _mouse.x);
-		float hdistance = (_pl->getCharacterData().y - _mouse.y);
+		float wdistance = (_pl->getCharacterData().x - _mouse.x) / 2;
+		float hdistance = (_pl->getCharacterData().y - _mouse.y) / 2;
 		_rc = RectMakeCenter(_pl->getCharacterData().x - wdistance, _pl->getCharacterData().y - hdistance, WINSIZEX, WINSIZEY);
 	}
 

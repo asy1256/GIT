@@ -78,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animation.h" />
+    <ClInclude Include="aStar.h" />
     <ClInclude Include="bulletB.h" />
     <ClInclude Include="bulletK.h" />
     <ClInclude Include="bullets.h" />
@@ -123,6 +124,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="animation.cpp" />
+    <ClCompile Include="aStar.cpp" />
     <ClCompile Include="bulletB.cpp" />
     <ClCompile Include="bulletK.cpp" />
     <ClCompile Include="bullets.cpp" />

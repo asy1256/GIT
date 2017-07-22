@@ -73,7 +73,7 @@ void player::update(void)
 		_ch.grc = RectMakeCenter(_ch.rc.left - _ch.gun->getFrameWidth() + 10, _ch.y + 10, _ch.gun->getFrameWidth(), _ch.gun->getFrameHeight());
 	}
 	_ch.idX = _ch.x / TILESIZE;
-	_ch.idY = _ch.crc.top + 10 / TILESIZE;
+	_ch.idY = (_ch.crc.top + 10) / TILESIZE;
 
 	if (_reload)
 	{
@@ -253,6 +253,7 @@ void player::frameup(void)
 		++_ch.gframecount;
 		if (_ch.gframecount >= 5)
 		{
+			if (_ch.gframeX == 0) { _bullet->fire(_ch.x, _ch.y, _ch.angle); }
 			++_ch.gframeX;
 			_ch.gframecount = 0;
 			if (_ch.gframeX >= 4)
@@ -260,7 +261,6 @@ void player::frameup(void)
 				_ch.gframeX = 0;
 				--_ammo;
 				_fire = false;
-				_bullet->fire(_ch.x, _ch.y, _ch.angle);
 			}
 		}
 	}

@@ -48,6 +48,8 @@ void objectManager::render(HDC hdc)
 
 void objectManager::setup(void)
 {
+	table* tp;
+
 	for (int y = 0; y < TILEY; ++y)
 	{
 		for (int x = 0; x < TILEX; ++x)
@@ -57,6 +59,13 @@ void objectManager::setup(void)
 				_temp = new door;
 				_temp->init(_Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].obj, _Tile[y][x].roomnum);
 				_vObject.push_back(_temp);
+			}
+			if (_Tile[y][x].obj == TABLE_WIDTH || _Tile[y][x].obj == TABLE_LENGTH)
+			{
+				_temp = new table;
+				tp = (table*)_temp;
+				tp->init(_Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].obj);
+				_vObject.push_back(tp);
 			}
 		}
 	}

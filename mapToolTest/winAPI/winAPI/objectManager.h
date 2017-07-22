@@ -2,6 +2,7 @@
 
 #include "gameNode.h"
 #include "door.h"
+#include "table.h"
 
 class objectManager : public gameNode
 {

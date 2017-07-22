@@ -28,7 +28,12 @@ void character::update(void)
 	gameNode::update();
 }
 
-void character::render(void)
+void character::update(int plX, int plY)
+{
+	gameNode::update();
+}
+
+void character::render(HDC hdc)
 {
 
 }

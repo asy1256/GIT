@@ -46,11 +46,12 @@ HRESULT loadingScene::init(void)
 	_loading->loadFrameImage("mPistol", "m_pistol.bmp", 128, 20, 4, 1, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("kPistol", "k_pistol.bmp", 200, 32, 4, 1, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("bPistol", "b_pistol.bmp", 102, 32, 3, 1, true, RGB(255, 0, 255));
-	_loading->loadFrameImage("wTable", "w_table.bmp", 1512, 612, 12, 4, true, RGB(255, 0, 255));
-	_loading->loadFrameImage("hTable", "h_table.bmp", 1944, 660, 12, 4, true , RGB(255,0,255));
+	_loading->loadFrameImage("wTable", "w_table.bmp", 1992, 612, 12, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("hTable", "h_table.bmp", 1944, 820, 12, 4, true , RGB(255,0,255));
 	_loading->loadFrameImage("wDoor", "w_door.bmp", 432, 384, 4, 2, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("hDoor", "h_door.bmp", 512, 318, 4, 2, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("sheel", "sheel.bmp", 56, 40, 2, 2, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("ui", "ui.bmp", 336, 42, 7, 1, true, RGB(255, 0, 255));
 	_loading->loadImage("pBullet", "playerbullet.bmp", 18, 18, true, RGB(255,0,255));
 	_loading->loadImage("eBullet", "enemybullet.bmp", 12, 12, true, RGB(255, 0, 255));
 	_loading->loadImage("weapon", "weapon.bmp", 172, 152, true, RGB(255, 0, 255));

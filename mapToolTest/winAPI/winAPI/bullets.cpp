@@ -42,10 +42,11 @@ void bullet::render(HDC hdc)
 	draw(hdc);
 }
 
-void bullet::fire(float x, float y, float angle)
+void bullet::fire(float x, float y, float angle, fireDirection direction)
 {
 	tagBullet bullet;
 	ZeroMemory(&bullet, sizeof(tagBullet));
+	bullet.direction = direction;
 	bullet.fire = true;
 	bullet.count = 0;
 	bullet.angle = angle;
@@ -59,6 +60,9 @@ void bullet::fire(float x, float y, float angle)
 
 void bullet::move(void)
 {
+	int idX, idY;
+	RECT rc = RectMake(0,0,0,0);
+	
 	for (_viBullet = _vBullet.begin(); _viBullet != _vBullet.end();)
 	{
 		_viBullet->x += cosf(_viBullet->angle) * _viBullet->speed;
@@ -66,6 +70,74 @@ void bullet::move(void)
 
 		_viBullet->rc = RectMakeCenter(_viBullet->x, _viBullet->y,
 			_viBullet->img->getWidth(), _viBullet->img->getHeight());
+
+		//총알 벽에 부딪히는거 확인
+		idX = _viBullet->x / TILESIZE;
+		idY = _viBullet->y / TILESIZE;
+
+		switch (_viBullet->direction)
+		{
+		case RIGHT:
+			if (_Tile[idY][idX + 1].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX + 1].rc))
+			{
+				_viBullet->fire = false;
+			}
+			break;
+		case RIGHT_UP:
+			if (((_Tile[idY][idX + 1].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX + 1].rc)) ||
+				(_Tile[idY - 1][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY - 1][idX].rc))) ||
+				((_Tile[idY][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX].rc)) ||
+				(_Tile[idY][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX].rc))))
+			{
+				_viBullet->fire = false;
+			}
+			break;
+		case UP:
+			if (_Tile[idY - 1][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY - 1][idX].rc))
+			{
+				_viBullet->fire = false;
+			}
+			break;
+		case LEFT_UP:
+			if (((_Tile[idY][idX - 1].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX - 1].rc)) ||
+				(_Tile[idY - 1][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY - 1][idX].rc))) ||
+				((_Tile[idY][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX].rc)) ||
+				(_Tile[idY][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX].rc))))
+			{
+				_viBullet->fire = false;
+			}
+			break;
+		case LEFT:
+			if (_Tile[idY][idX - 1].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX - 1].rc))
+			{
+				_viBullet->fire = false;
+			}
+			break;
+		case LEFT_DOWN:
+			if (((_Tile[idY][idX - 1].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX - 1].rc)) ||
+				(_Tile[idY + 1][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY + 1][idX].rc))) ||
+				((_Tile[idY][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX].rc)) ||
+				(_Tile[idY][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX].rc))))
+			{
+				_viBullet->fire = false;
+			}
+			break;
+		case DOWN:
+			if (_Tile[idY + 1][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY + 1][idX].rc))
+			{
+				_viBullet->fire = false;
+			}
+			break;
+		case RIGHT_DOWN:
+			if (((_Tile[idY][idX + 1].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX + 1].rc)) ||
+				(_Tile[idY + 1][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY + 1][idX].rc))) ||
+				((_Tile[idY][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX].rc)) ||
+				(_Tile[idY][idX].wall != VOID_WALL && IntersectRect(&rc, &_viBullet->rc, &_Tile[idY][idX].rc))))
+			{
+				_viBullet->fire = false;
+			}
+			break;
+		}
 
 		//사거리 밖으로 나가면...
 		if (_range < getDistance(_viBullet->fireX, _viBullet->fireY, _viBullet->x, _viBullet->y) || !_viBullet->fire)

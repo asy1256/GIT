@@ -25,5 +25,4 @@ void gungeonScene::objectColision(void)
 			}
 		}
 	}
-
 }

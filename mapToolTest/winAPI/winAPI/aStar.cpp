@@ -197,6 +197,7 @@ void aStar::currentMove(POINT &current)
 		current.y = _openList[i].idY;
 		iter = _openList.begin() + i;
 	}
+	if (!_openList.empty()) { }
 	_openList.erase(iter);
 	_closeList.push_back(_aStile[current.y][current.x]);
 	_aStile[current.y][current.x].clan = CLOSE;
@@ -204,7 +205,6 @@ void aStar::currentMove(POINT &current)
 
 void aStar::pathPind(int endX, int endY)
 {	
-
 	for (tagAstile* iter = &_aStile[endY][endX]; iter->previous != NULL;)
 	{
 		_vPath.push_back(PointMake(iter->idX, iter->idY));

@@ -23,6 +23,8 @@ public:
 	virtual void update(void);
 	virtual void render(HDC hdc);
 
+	virtual void playerColision(void);
+
 	inline player* &getPlayer(void) { return _pl; }
 
 	characterManager();

@@ -6,7 +6,9 @@ struct tagCharacter
 	int frameX, frameY, framecount;
 	int gframeX, gframecount;
 	int idX, idY, roomnum;
+	int hp, maxhp;
 	float x, y, angle;
+	bool life;
 	RECT rc, crc, grc;
 	OBJECT obj;
 	image* img;

@@ -14,6 +14,7 @@ HRESULT bulletK::init(float x, float y, OBJECT obj, int roomnum)
 	character::init();
 
 	_move = false;
+	_respon = true;
 	_moveangle = _astarcount = 0;
 	_nextTile = 0;
 
@@ -37,14 +38,14 @@ void bulletK::release(void)
 	character::release();
 }
 
-void bulletK::update(int plX, int plY)
+void bulletK::update(int plX, int plY, bool blankshot)
 {
 	character::update();
 
 	if (!_move)
 	{
 		++_astarcount;
-		if (_astarcount >= 20)
+		if (_astarcount >= 5)
 		{
 			_astarcount = 0;
 			_nextTile = 0;
@@ -65,8 +66,9 @@ void bulletK::update(int plX, int plY)
 			if (2 > getDistance(_ch.x, _ch.y, _Tile[nidy][nidx].rc.left + TILESIZE / 2, _Tile[nidy][nidx].rc.top + TILESIZE / 2))
 			{
 				++_astarcount;
-				if (_astarcount >= 60)
+				if (_astarcount >= 20)
 				{
+					_astarcount = 0;
 					_move = false;
 				}
 				++_nextTile;

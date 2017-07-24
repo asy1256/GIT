@@ -7,8 +7,7 @@ class table : public Object
 private:
 	struct tagTabledata
 	{
-		bool action;
-		bool stand;
+		bool action, stand, hit;
 		bool left, right, up, down;
 		int hp;
 
@@ -23,6 +22,9 @@ public:
 	virtual void release(void);
 	virtual void update(void);
 	virtual void render(HDC hdc);
+
+	virtual void standup(void);
+	virtual void hitup(void);
 
 	virtual tagObject &getObjectData(void) { return _ob; }
 	virtual tagTabledata &getTableData(void) { return _tb; }

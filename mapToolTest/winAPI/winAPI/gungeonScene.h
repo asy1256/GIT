@@ -15,6 +15,7 @@ private:
 	image* _minimapcase;
 	image* _weaponcase;
 	image* _sheel;
+	image* _ui;
 
 	tagTile _tile[TILEY][TILEX];
 

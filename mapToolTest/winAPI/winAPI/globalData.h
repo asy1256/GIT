@@ -58,3 +58,15 @@ struct tagTile
 	int wallX, wallY;
 	int objframeX, objframeY;
 };
+
+enum fireDirection
+{
+	RIGHT,
+	RIGHT_UP,
+	UP,
+	LEFT_UP,
+	LEFT,
+	LEFT_DOWN,
+	DOWN,
+	RIGHT_DOWN
+};

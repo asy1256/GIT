@@ -6,6 +6,7 @@
 struct tagBullet
 {
 	image* img;
+	fireDirection direction;
 	RECT rc;
 	int currentX;
 	float speed;
@@ -30,12 +31,12 @@ public:
 	virtual void update(void);
 	virtual void render(HDC hdc);
 
-	virtual void fire(float x, float y, float angle);
+	virtual void fire(float x, float y, float angle, fireDirection direction);
 	virtual void move(void);
 	virtual void remove(void);
 	virtual void draw(HDC hdc);
 
-	virtual vector<tagBullet> &getRC(void) { return _vBullet; }
+	virtual vector<tagBullet> &getBulletVector(void) { return _vBullet; }
 	virtual void setFire(bool fire, int arrnum) { _vBullet[arrnum].fire = fire; }
 
 	bullet(void);
@@ -60,6 +61,8 @@ public:
 	virtual void fire(float x, float y, float angle, float speed);
 	virtual void move(void);
 	virtual void draw(void);
+
+	virtual vector<tagBullet> &getBullet(void) { return _vBullet; }
 
 	void removeBullet(int arrNum);
 

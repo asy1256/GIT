@@ -65,10 +65,16 @@ void characterManager::update(void)
 		if (_vCharacter[i]->getCharacterData().obj == BULLET_KIN)
 		{
 			bulletK* mon = (bulletK*)_vCharacter[i];
-			mon->update(_pl->getCharacterData().idX, _pl->getCharacterData().idY);
+			mon->update(_pl->getCharacterData().idX, _pl->getCharacterData().idY, _pl->getBlankshot());
 		}
 		else { _vCharacter[i]->update(); }
 	}
+	playerColision();
+	if (_pl->getBlankshot() && !_ebullet->getBullet().empty())
+	{
+		_ebullet->getBullet().clear();
+	}
+
 
 	_ebullet->update();
 }
@@ -79,4 +85,9 @@ void characterManager::render(HDC hdc)
 	{
 		_vCharacter[i]->render(hdc);
 	}
+}
+
+void characterManager::playerColision(void)
+{
+
 }

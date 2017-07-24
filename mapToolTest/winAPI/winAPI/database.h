@@ -31,9 +31,7 @@ private:
 	arrElement _mTotalElement;
 
 public:
-	int pstarty = 0;
-	int pstartx = 0;
-
+	POINT spon = PointMake(0, 0);
 
 public:
 	HRESULT init(void);

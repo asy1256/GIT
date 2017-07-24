@@ -57,19 +57,26 @@ void gungeonScene::setup(void)
 {
 	//타일 불러오기
 	{
-		HANDLE file;
+		HANDLE file, file2;
 		DWORD read;
 
 		file = CreateFile("stageOne", GENERIC_READ, 0, NULL,
 			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 		ReadFile(file, _Tile, sizeof(tagTile) * TILEX * TILEY, &read, NULL);
+
+		file2 = CreateFile("spon", GENERIC_READ, 0, NULL,
+			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		ReadFile(file2, &DATABASE->spon, sizeof(POINT), &read, NULL);
+
 		CloseHandle(file);
+		CloseHandle(file2);
 	}
 	//변수 초기화
 	{
-		_campt.x = DATABASE->pstartx * TILESIZE;
-		_campt.y = DATABASE->pstarty * TILESIZE;
+		_campt.x = DATABASE->spon.x * TILESIZE;
+		_campt.y = DATABASE->spon.y * TILESIZE;
 
 		_ptadd.x = _campt.x - WINSIZEX / 2;
 		if (_campt.y > WINSIZEY / 2) { _ptadd.y = _campt.y - WINSIZEY / 2; }
@@ -87,6 +94,7 @@ void gungeonScene::setup(void)
 		_minimapcase = IMAGEMANAGER->findImage("minimapcase");
 		_weaponcase = IMAGEMANAGER->findImage("weapon");
 		_sheel = IMAGEMANAGER->findImage("sheel");
+		_ui = IMAGEMANAGER->findImage("ui");
 	}
 
 	_cm = new characterManager;
@@ -94,6 +102,8 @@ void gungeonScene::setup(void)
 
 	_om = new objectManager;
 	_om->init();
+
+	_cm->getPlayer()->setObject(_om);
 
 	_cam = new camera;
 	_cam->init(&_campt, _cm->getPlayer(), _cimg, true);
@@ -174,10 +184,12 @@ void gungeonScene::draw(void)
 		}
 	}
 
-	//현재총알 그려 그려
+	//화면에 뿌려줄 UI 관련 부분
 	_weaponcase->render(getBackDC(), _cam->getRC().right - _sheel->getFrameWidth() - _weaponcase->getWidth(),
 		_cam->getRC().bottom - _sheel->getFrameHeight() / 2 - _weaponcase->getHeight());
 
+	_cm->getPlayer()->getCharacterData().hp;
+	
 	for (int i = 0; i < 12; ++i)
 	{
 		if (i == 0) { _sheel->frameRender(getBackDC(), _sheelrc[i].left, _sheelrc[i].top, 1, 1); }
@@ -188,6 +200,85 @@ void gungeonScene::draw(void)
 			else { _sheel->frameRender(getBackDC(), _sheelrc[i].left, _sheelrc[i].top, 0, 0); }
 		}
 	}
+	//체력 과 장갑
+	{
+		if (_cm->getPlayer()->getCharacterData().hp == 6)
+		{
+			for (int x = 0, i = 0; i < 3; ++i, x += _ui->getFrameWidth())
+			{
+				_ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 0, 0);
+			}
+		}
+		else if (_cm->getPlayer()->getCharacterData().hp == 5)
+		{
+			for (int x = 0, i = 0; i < 3; ++i, x += _ui->getFrameWidth())
+			{
+				if (i == 2) { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 1, 0); }
+				else { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 0, 0); }
+			}
+		}
+		else if (_cm->getPlayer()->getCharacterData().hp == 4)
+		{
+			for (int x = 0, i = 0; i < 3; ++i, x += _ui->getFrameWidth())
+			{
+				if (i == 2) { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 2, 0); }
+				else { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 0, 0); }
+			}
+		}
+		else if (_cm->getPlayer()->getCharacterData().hp == 3)
+		{
+			for (int x = 0, i = 0; i < 3; ++i, x += _ui->getFrameWidth())
+			{
+				if (i == 2) { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 2, 0); }
+				else if (i == 1) { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 1, 0); }
+				else { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 0, 0); }
+			}
+		}
+		else if (_cm->getPlayer()->getCharacterData().hp == 2)
+		{
+			for (int x = 0, i = 0; i < 3; ++i, x += _ui->getFrameWidth())
+			{
+				if (i == 0) { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 0, 0); }
+				else { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 2, 0); }
+			}
+		}
+		else if (_cm->getPlayer()->getCharacterData().hp == 1)
+		{
+			for (int x = 0, i = 0; i < 3; ++i, x += _ui->getFrameWidth())
+			{
+				if (i == 0) { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 1, 0); }
+				else { _ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 2, 0); }
+			}
+		}
+		else
+		{
+			for (int x = 0, i = 0; i < 3; ++i, x += _ui->getFrameWidth())
+			{
+				_ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top, 2, 0);
+			}
+		}
+	}
+	//공포탄
+	for (int x = 0, i = 0; i < _cm->getPlayer()->getPlayerData().blankshot; ++i, x += _ui->getFrameWidth())
+	{
+		_ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top + _ui->getFrameHeight(), 4, 0);
+	}
+	//열쇠랑 돈
+	for (int x = 0, fx = 5, i = 0; i < 2; ++i, ++fx, x += _ui->getFrameWidth() + _ui->getFrameWidth() / 2)
+	{
+		_ui->frameRender(getBackDC(), _cam->getRC().left + x, _cam->getRC().top + _ui->getFrameHeight() * 2, fx, 0);
+		if (i == 0)
+		{
+			sprintf(str, "%d", _cm->getPlayer()->getPlayerData().key);
+			TextOut(getBackDC(), _cam->getRC().left + x + _ui->getFrameWidth(), _cam->getRC().top + _ui->getFrameHeight() * 2, str, strlen(str));
+		}
+		else
+		{
+			sprintf(str, "%d", _cm->getPlayer()->getPlayerData().money);
+			TextOut(getBackDC(), _cam->getRC().left + x + _ui->getFrameWidth(), _cam->getRC().top + _ui->getFrameHeight() * 2, str, strlen(str));
+		}
+	}
+
 
 	//테스트
 	sprintf(str, "X좌표 : %f Y좌표 : %f", _cm->getPlayer()->getCharacterData().x, _cm->getPlayer()->getCharacterData().y);

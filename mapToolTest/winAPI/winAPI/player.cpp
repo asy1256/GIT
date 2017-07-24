@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "player.h"
+#include "objectManager.h"
 
 player::player()
+	:_obm(NULL)
 {
 }
 
@@ -12,21 +14,28 @@ player::~player()
 HRESULT player::init(float x, float y)
 {
 	character::init();
+	memset(&_pl, 0, sizeof(_pl));
 	_baseframeX = 8;
 	_baseframeY = 1;
 	_dodge = false;
 	_move = false;
 	_fire = false;
+	_bfire = false;
 	_reload = false;
 	_right = _up = _left = _down = false;
 	_direc = DOWN;
 	_ammo = 10;
-	_currentreloadtime = 0;
+	_currentreloadtime = _blankcount = 0;
 	_reloadtime = 60;
 
 	_reloadgage = IMAGEMANAGER->findImage("reloading");
 	_reloadbar = IMAGEMANAGER->findImage("reloadingbar");
 
+	_pl.blankshot = 2;
+	_pl.money = 0;
+	_pl.key = 1;
+
+	_ch.maxhp = _ch.hp = 6;
 	_ch.x = x;
 	_ch.y = y;
 	_ch.img = IMAGEMANAGER->findImage("marin");
@@ -91,6 +100,7 @@ void player::render(HDC hdc)
 		_reloadbar->render(hdc, _reloadingbar.left + _nowloading, _reloadingbar.top);
 	}
 	_ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, _ch.frameY);
+	Rectangle(hdc, _ch.crc.left, _ch.crc.top, _ch.crc.right, _ch.crc.bottom);
 	_bullet->render(hdc);
 }
 
@@ -99,36 +109,32 @@ void player::keycontrol(void)
 	//이동
 	if (!_dodge)
 	{
+		if (KEYMANAGER->isStayKeyDown('S'))
+		{
+			_down = true;
+			_move = true;
+			move(4);
+		}
+		if (KEYMANAGER->isOnceKeyUp('S')) { _down = false; }
 		if (KEYMANAGER->isStayKeyDown('W'))
 		{
 			_up = true;
 			_move = true;
-			_ch.y -= 6;
-			if (_ch.y > (WINSIZEY / 2)) { _ptadd.y -= 6; }
+			move(3);
 		}
 		if (KEYMANAGER->isOnceKeyUp('W')) { _up = false; }
 		if (KEYMANAGER->isStayKeyDown('A'))
 		{
 			_left = true;
 			_move = true;
-			_ch.x -= 6;
-			if (_ch.x > (WINSIZEX / 2)) { _ptadd.x -= 6; }
+			move(2);
 		}
 		if (KEYMANAGER->isOnceKeyUp('A')) { _left = false; }
-		if (KEYMANAGER->isStayKeyDown('S'))
-		{
-			_down = true;
-			_move = true;
-			_ch.y += 6;
-			if (_ch.y < (TILEHEIGHT - WINSIZEY / 2)) { _ptadd.y += 6; }
-		}
-		if (KEYMANAGER->isOnceKeyUp('S')) { _down = false; }
 		if (KEYMANAGER->isStayKeyDown('D'))
 		{
 			_right = true;
 			_move = true;
-			_ch.x += 6;
-			if (_ch.x < (TILEWIDTH - WINSIZEX / 2)) { _ptadd.x += 6; }
+			move(1);
 		}
 		if (KEYMANAGER->isOnceKeyUp('D')) { _right = false; }
 	}
@@ -138,17 +144,46 @@ void player::keycontrol(void)
 	}
 
 	if (!_right && !_up && !_left && !_down) { _move = false; }
-
+	//공포탄
+	if (KEYMANAGER->isOnceKeyDown('Q'))
+	{
+		if (!_bfire) { _bfire = true; }
+	}
+	//밥상뒤집거나 뭐 등 등 해봅시다.
+	if (KEYMANAGER->isOnceKeyDown('E'))
+	{
+		if (_obm != NULL)
+		{
+			for (int i = 0; i < _obm->getObjectvector().size(); ++i)
+			{
+				if (_obm->getObjectvector()[i]->getObjectData().type == TABLE_WIDTH ||
+					_obm->getObjectvector()[i]->getObjectData().type == TABLE_LENGTH)
+				{
+					RECT rc = RectMake(0, 0, 0, 0);
+					table* temp = (table*)_obm->getObjectvector()[i];
+					if (IntersectRect(&rc, &temp->getObjectData().rc, &_ch.rc) && !temp->getTableData().action && !temp->getTableData().stand)
+					{
+						temp->getTableData().action = true;
+						if (rc.top == temp->getObjectData().rc.top) { temp->getTableData().down = true; temp->getObjectData().frameY = 3; }
+						if (rc.bottom == temp->getObjectData().rc.bottom) { temp->getTableData().up = true; temp->getObjectData().frameY = 1; }
+						if (rc.right == temp->getObjectData().rc.right) { temp->getTableData().left = true; temp->getObjectData().frameY = 2; }
+						if (rc.left == temp->getObjectData().rc.left) { temp->getTableData().right = true; temp->getObjectData().frameY = 0; }
+					}
+				}
+			}
+		}
+	}
+	//재장전
 	if (KEYMANAGER->isOnceKeyDown('R'))
 	{
 		if (_ammo != 10 && !_reload) { _reload = true; }
 	}
-
+	//총쏘기
 	if (KEYMANAGER->isStayKeyDown(VK_LBUTTON))
 	{
 		if (!_dodge && _ammo > 0) { _fire = true; }
 	}
-	
+	//구르기
 	if (KEYMANAGER->isOnceKeyDown(VK_RBUTTON))
 	{
 		if (!_dodge)
@@ -177,6 +212,45 @@ void player::dodgeup(void)
 	else if (_up) { _ch.y -= 8; _ptadd.y -= 8; }
 	else if (_left) { _ch.x -= 8; _ptadd.x -= 8; }
 	else if (_down) { _ch.y += 8; _ptadd.y += 8; }
+
+	RECT rc = RectMake(0,0,0,0);
+	//벽과충돌해서 막는다... 시발..?
+	if (_right)
+	{
+		if (!_Tile[_ch.idY][_ch.idX + 1].pass &&
+			IntersectRect(&rc, &_Tile[_ch.idY][_ch.idX + 1].rc, &_ch.crc))
+		{
+			_ch.x -= rc.right - rc.left + 7;
+			_ptadd.x -= rc.right - rc.left + 7;
+		}
+	}
+	if (_left)
+	{
+		if (!_Tile[_ch.idY][_ch.idX - 1].pass &&
+			IntersectRect(&rc, &_Tile[_ch.idY][_ch.idX - 1].rc, &_ch.crc))
+		{
+			_ch.x += rc.right - rc.left + 7;
+			_ptadd.x += rc.right - rc.left + 7;
+		}
+	}
+	if (_down)
+	{
+		if (!_Tile[_ch.idY + 1][_ch.idX].pass &&
+			IntersectRect(&rc, &_Tile[_ch.idY + 1][_ch.idX].rc, &_ch.crc))
+		{
+			_ch.y -= rc.bottom - rc.top + 7;
+			_ptadd.y -= rc.bottom - rc.top + 7;
+		}
+	}
+	if (_up)
+	{
+		if (!_Tile[_ch.idY - 1][_ch.idX].pass &&
+			IntersectRect(&rc, &_Tile[_ch.idY - 1][_ch.idX].rc, &_ch.crc))
+		{
+			_ch.y += rc.bottom - rc.top;
+			_ptadd.y += rc.bottom - rc.top;
+		}
+	}
 }
 
 void player::angleup(void)
@@ -238,6 +312,15 @@ void player::angleup(void)
 void player::frameup(void)
 {
 	if (_ch.frameX < _baseframeX && !_dodge) { _ch.frameX = _baseframeX; }
+	if (_bfire)
+	{
+		++_blankcount;
+		if (_blankcount >= 60)
+		{
+			_blankcount = 0;
+			_bfire = false;
+		}
+	}
 	if (_reload)
 	{
 		++_currentreloadtime;
@@ -253,7 +336,7 @@ void player::frameup(void)
 		++_ch.gframecount;
 		if (_ch.gframecount >= 5)
 		{
-			if (_ch.gframeX == 0) { _bullet->fire(_ch.x, _ch.y, _ch.angle); }
+			if (_ch.gframeX == 0) { _bullet->fire(_ch.x, _ch.y, _ch.angle, _direc); }
 			++_ch.gframeX;
 			_ch.gframecount = 0;
 			if (_ch.gframeX >= 4)
@@ -310,12 +393,139 @@ void player::frameup(void)
 	}
 }
 
-void player::colision(void)
+void player::move(int direction)
 {
+	RECT rcCollision;
+	POINT tileIndex[2];
+	int direc = direction;
 
+	rcCollision = _ch.crc;
+
+	switch (direc)
+	{
+	case 1:
+		_ch.x += 6;
+		_ptadd.x += 6;
+		_ch.rc = RectMakeCenter(_ch.x, _ch.y, _ch.img->getFrameWidth(), _ch.img->getFrameHeight());
+		rcCollision = RectMake(_ch.rc.left, _ch.rc.bottom - 20, _ch.img->getFrameWidth(), 20);
+		break;
+	case 2:
+		_ch.x -= 6;
+		_ptadd.x -= 6;
+		_ch.rc = RectMakeCenter(_ch.x, _ch.y, _ch.img->getFrameWidth(), _ch.img->getFrameHeight());
+		rcCollision = RectMake(_ch.rc.left, _ch.rc.bottom - 20, _ch.img->getFrameWidth(), 20);
+		break;
+	case 3:
+		_ch.y -= 6;
+		_ptadd.y -= 6;
+		_ch.rc = RectMakeCenter(_ch.x, _ch.y, _ch.img->getFrameWidth(), _ch.img->getFrameHeight());
+		rcCollision = RectMake(_ch.rc.left, _ch.rc.bottom - 20, _ch.img->getFrameWidth(), 20);
+		break;
+	case 4:
+		_ch.y += 6;
+		_ptadd.y += 6;
+		rcCollision = RectMake(_ch.rc.left, _ch.rc.bottom - 20, _ch.img->getFrameWidth(), 20);
+		break;
+	}
+
+	//검사할 타일 인덱스...
+	switch (direc)
+	{
+	case 1:
+		tileIndex[0] = PointMake(_ch.idX, _ch.idY);
+		tileIndex[1] = PointMake(_ch.idX + 1, _ch.idY);
+		break;
+	case 2:
+		tileIndex[0] = PointMake(_ch.idX, _ch.idY);
+		tileIndex[1] = PointMake(_ch.idX - 1, _ch.idY);
+		break;
+	case 3:
+		tileIndex[0] = PointMake(_ch.idX, _ch.idY);
+		tileIndex[1] = PointMake(_ch.idX, _ch.idY - 1);
+		break;
+	case 4:
+		tileIndex[0] = PointMake(_ch.idX, _ch.idY);
+		tileIndex[1] = PointMake(_ch.idX, _ch.idY + 1);
+		break;
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		//쭝돌
+		RECT rc = RectMake(0,0,0,0);
+		if (!_Tile[tileIndex[i].y][tileIndex[i].x].pass &&
+			IntersectRect(&rc, &_Tile[tileIndex[i].y][tileIndex[i].x].rc, &rcCollision))
+		{
+			switch (direc)
+			{
+			case 1:
+				_ch.x -= rc.right - rc.left;
+				_ptadd.x -= rc.right - rc.left;
+				break;
+			case 2:
+				_ch.x += rc.right - rc.left;
+				_ptadd.x += rc.right - rc.left;
+				break;
+			case 3:
+				_ch.y += rc.bottom - rc.top;
+				_ptadd.y += rc.bottom - rc.top;
+				break;
+			case 4:
+				_ch.y -= rc.bottom - rc.top + 5;
+				_ptadd.y -= rc.bottom - rc.top + 5;
+				break;
+			}
+			_ch.rc = RectMakeCenter(_ch.x, _ch.y, _ch.img->getFrameWidth(), _ch.img->getFrameHeight());
+			return;
+		}
+	}
 }
 
-void player::lol(void)
+void player::colision(void)
 {
-
+	for (int i = 0; i < _obm->getObjectvector().size(); ++i)
+	{
+		if (_obm->getObjectvector()[i]->getObjectData().type == TABLE_WIDTH ||
+			_obm->getObjectvector()[i]->getObjectData().type == TABLE_LENGTH)
+		{
+			RECT rc = RectMake(0, 0, 0, 0);
+			table* tb = (table*)_obm->getObjectvector()[i];
+			if (IntersectRect(&rc, &tb->getObjectData().crc, &_ch.crc) && tb->getTableData().stand && tb->getTableData().hp != 0)
+			{
+				int wid = rc.right - rc.left;
+				int hei = rc.bottom - rc.top;
+				if (wid > hei)
+				{
+					if (rc.top == tb->getObjectData().crc.top)
+					{
+						tb->getObjectData().y += hei / 2;
+						_ch.y -= hei / 2;
+						_ptadd.y -= hei / 2;
+					}
+					if (rc.bottom == tb->getObjectData().crc.bottom)
+					{
+						tb->getObjectData().y -= hei / 2;
+						_ch.y += hei / 2;
+						_ptadd.y += hei / 2;
+					}
+				}
+				else
+				{
+					if (rc.left == tb->getObjectData().crc.left)
+					{
+						tb->getObjectData().x += wid / 2;
+						_ch.x -= wid / 2;
+						_ptadd.x -= wid / 2;
+					}
+					if (rc.right == tb->getObjectData().crc.right)
+					{
+						tb->getObjectData().x -= wid / 2;
+						_ch.x += wid / 2;
+						_ptadd.x += wid / 2;
+					}
+				}
+				break;
+			}
+		}
+	}
 }

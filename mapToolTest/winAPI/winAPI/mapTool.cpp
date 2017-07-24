@@ -452,26 +452,39 @@ void mapTool::tileselect(void)
 				//세이브
 				if (y == 3)
 				{
-					HANDLE file;
+					HANDLE file, file2;
 					DWORD write;
 
 					file = CreateFile("stageOne", GENERIC_WRITE, 0, NULL,
 						CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 					WriteFile(file, _tile, sizeof(tagTile) * TILEX * TILEY, &write, NULL);
+
+					file2 = CreateFile("spon", GENERIC_WRITE, 0, NULL,
+						CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+					WriteFile(file2, &DATABASE->spon, sizeof(POINT), &write, NULL);
+
 					CloseHandle(file);
+					CloseHandle(file2);
 				}
 				//로드
 				if (y == 4)
 				{
-					HANDLE file;
+					HANDLE file, file2;
 					DWORD read;
 
 					file = CreateFile("stageOne", GENERIC_READ, 0, NULL,
 						OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 					ReadFile(file, _tile, sizeof(tagTile) * TILEX * TILEY, &read, NULL);
+
+					file2 = CreateFile("spon", GENERIC_READ, 0, NULL,
+						OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+					ReadFile(file2, &DATABASE->spon, sizeof(POINT), &read, NULL);
 					CloseHandle(file);
+					CloseHandle(file2);
 				}
 				_option[y].select = true;
 				_nowselecct = _option[y].kind;
@@ -521,6 +534,8 @@ void mapTool::tiledraw(void)
 				_tile[nowy][nowx + 1].objframeY = 5;
 				_tile[nowy][nowx].obj = TABLE_WIDTH;
 				_tile[nowy][nowx + 1].obj = BLANK;
+				_tile[nowy][nowx].pass = false;
+				_tile[nowy][nowx + 1].pass = false;
 			}
 		}
 		//세로 테이블
@@ -535,6 +550,8 @@ void mapTool::tiledraw(void)
 				_tile[nowy - 1][nowx].objframeY = 5;
 				_tile[nowy][nowx].obj = TABLE_LENGTH;
 				_tile[nowy - 1][nowx].obj = BLANK;
+				_tile[nowy][nowx].pass = false;
+				_tile[nowy - 1][nowx].pass = false;
 			}
 		}
 		//나무 통 or 폭탄통
@@ -1146,6 +1163,7 @@ void mapTool::tiledraw(void)
 								_tile[y][x].objframeX = (_tile[y][x].wall == STON_WALL) ? 7 : 4;
 								_tile[y][x].objframeY = 0;
 								_tile[y][x].obj = WALL_TOP;
+								_tile[y][x].pass = true;
 								continue;
 							}
 							if (y == ey - 1 && x == ex - 1)//오른쪽아래
@@ -1153,6 +1171,7 @@ void mapTool::tiledraw(void)
 								_tile[y][x].objframeX = (_tile[y][x].wall == STON_WALL) ? 9 : 6;
 								_tile[y][x].objframeY = 0;
 								_tile[y][x].obj = WALL_TOP;
+								_tile[y][x].pass = true;
 								continue;
 							}
 							//사변
@@ -1373,8 +1392,8 @@ void mapTool::tiledraw(void)
 					}
 					if (y > _start.y + 2 && y < _start.y + 24) { ++ty; }
 				}
-				DATABASE->pstarty = _start.y + 12;
-				DATABASE->pstartx = _start.x + 10;
+				DATABASE->spon.x = _start.y + 12;
+				DATABASE->spon.y = _start.x + 10;
 				++_makeroom;
 			}
 		}

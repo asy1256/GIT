@@ -9,7 +9,7 @@ private:
 	{
 		bool action, stand, hit;
 		bool left, right, up, down;
-		int hp;
+		int hp, hitcount;
 
 		RECT hrc;
 	};

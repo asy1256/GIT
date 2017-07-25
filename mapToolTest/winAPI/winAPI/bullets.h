@@ -3,6 +3,10 @@
 #include "gamenode.h"
 #include <vector>
 
+class objectManager;
+class characterManager;
+class player;
+
 struct tagBullet
 {
 	image* img;
@@ -14,6 +18,7 @@ struct tagBullet
 	float fireX, fireY;
 	float angle;
 	int count;
+	int who;
 	bool fire;
 };
 
@@ -49,20 +54,27 @@ private:
 	vector<tagBullet> _vBullet;
 	vector<tagBullet>::iterator _viBullet;
 
-	const char* _imageName;
 	float _range;
+	bool* _plmove;
+
+	objectManager* _om;
+	characterManager* _cm;
+	player* _pl;
 
 public:
-	virtual HRESULT init(const char* imageName, float range);
+	virtual HRESULT init(float range, bool* move);
 	virtual void release(void);
 	virtual void update(void);
-	virtual void render(void);
+	virtual void render(HDC hdc);
 
-	virtual void fire(float x, float y, float angle, float speed);
+	virtual void fire(float x, float y, float angle, float speed, fireDirection direction, int who);
 	virtual void move(void);
-	virtual void draw(void);
+	virtual void draw(HDC hdc);
 
 	virtual vector<tagBullet> &getBullet(void) { return _vBullet; }
+	virtual void setObjectManager(objectManager* obm) { _om = obm; }
+	virtual void setCharacterManager(characterManager* chm) { _cm = chm; }
+	virtual void setPlayer(player* pl) { _pl = pl; }
 
 	void removeBullet(int arrNum);
 

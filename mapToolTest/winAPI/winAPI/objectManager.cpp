@@ -48,7 +48,8 @@ void objectManager::render(HDC hdc)
 
 void objectManager::setup(void)
 {
-	table* tp;
+	table* tb;
+	telepoter* tp;
 
 	for (int y = 0; y < TILEY; ++y)
 	{
@@ -63,7 +64,14 @@ void objectManager::setup(void)
 			if (_Tile[y][x].obj == TABLE_WIDTH || _Tile[y][x].obj == TABLE_LENGTH)
 			{
 				_temp = new table;
-				tp = (table*)_temp;
+				tb = (table*)_temp;
+				tb->init(_Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].obj);
+				_vObject.push_back(tb);
+			}
+			if (_Tile[y][x].obj == TELEPOTER)
+			{
+				_temp = new telepoter;
+				tp = (telepoter*)_temp;
 				tp->init(_Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].obj);
 				_vObject.push_back(tp);
 			}

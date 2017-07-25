@@ -15,6 +15,19 @@ struct tagCharacter
 	image* gun;
 };
 
+enum monsterSqence
+{
+	HOLD,
+	SPAWN,
+	DONE
+};
+
+struct tagMonsters
+{
+	monsterSqence sqence;
+};
+
+
 class character : public gameNode
 {
 protected:

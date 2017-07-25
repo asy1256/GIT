@@ -34,7 +34,11 @@ HRESULT player::init(float x, float y)
 	_pl.blankshot = 2;
 	_pl.money = 0;
 	_pl.key = 1;
+	_pl.hitcount = 0;
+	_pl.teleporting = false;
+	_pl.hit = false;
 
+	_ch.life = true;
 	_ch.maxhp = _ch.hp = 6;
 	_ch.x = x;
 	_ch.y = y;
@@ -79,7 +83,7 @@ void player::update(void)
 	}
 	else if ((_degree <= 269 && _degree >= 90))
 	{
-		_ch.grc = RectMakeCenter(_ch.rc.left - _ch.gun->getFrameWidth() + 10, _ch.y + 10, _ch.gun->getFrameWidth(), _ch.gun->getFrameHeight());
+		_ch.grc = RectMakeCenter(_ch.rc.left - _ch.gun->getFrameWidth() + 20, _ch.y + 10, _ch.gun->getFrameWidth(), _ch.gun->getFrameHeight());
 	}
 	_ch.idX = _ch.x / TILESIZE;
 	_ch.idY = (_ch.crc.top + 10) / TILESIZE;
@@ -93,7 +97,17 @@ void player::update(void)
 
 void player::render(HDC hdc)
 {
-	if (!_dodge) { _ch.gun->frameRender(hdc, _ch.grc.left, _ch.grc.top, _ch.gframeX, 0); }
+	if (!_dodge)
+	{
+		if ((_degree >= 0 && _degree <= 89) || (_degree >= 270 && _degree <= 360))
+		{
+			_ch.gun->frameRender(hdc, _ch.grc.left, _ch.grc.top, _ch.gframeX, 0);
+		}
+		else
+		{
+			_ch.gun->frameRender(hdc, _ch.grc.left, _ch.grc.top, _ch.gframeX, 1);
+		}
+	}
 	if (_reload)
 	{
 		_reloadgage->render(hdc, _reloadingbar.left, _reloadingbar.top);
@@ -156,10 +170,11 @@ void player::keycontrol(void)
 		{
 			for (int i = 0; i < _obm->getObjectvector().size(); ++i)
 			{
+				if (_obm->getObjectvector()[i]->getObjectData().borken) { continue; }
+				RECT rc = RectMake(0, 0, 0, 0);
 				if (_obm->getObjectvector()[i]->getObjectData().type == TABLE_WIDTH ||
 					_obm->getObjectvector()[i]->getObjectData().type == TABLE_LENGTH)
 				{
-					RECT rc = RectMake(0, 0, 0, 0);
 					table* temp = (table*)_obm->getObjectvector()[i];
 					if (IntersectRect(&rc, &temp->getObjectData().rc, &_ch.rc) && !temp->getTableData().action && !temp->getTableData().stand)
 					{
@@ -168,6 +183,27 @@ void player::keycontrol(void)
 						if (rc.bottom == temp->getObjectData().rc.bottom) { temp->getTableData().up = true; temp->getObjectData().frameY = 1; }
 						if (rc.right == temp->getObjectData().rc.right) { temp->getTableData().left = true; temp->getObjectData().frameY = 2; }
 						if (rc.left == temp->getObjectData().rc.left) { temp->getTableData().right = true; temp->getObjectData().frameY = 0; }
+					}
+				}
+				if (_obm->getObjectvector()[i]->getObjectData().type == TELEPOTER)
+				{
+					telepoter* tp = (telepoter*)_obm->getObjectvector()[i];
+					if (IntersectRect(&rc, &_ch.crc, &tp->getObjectData().rc) && tp->getTpData().activated && tp->getTpData().turnon)
+					{
+						tp->getTpData().activated = false;
+						tp->getObjectData().frameY = 3;
+
+						POINT temp;
+						temp.x = _ch.x;
+						temp.y = _ch.y;
+						_ch.x = DATABASE->past.x;
+						_ch.y = DATABASE->past.y;
+
+						int wid = temp.x - _ch.x;
+						int hei = temp.y - _ch.y;
+
+						_ptadd.x -= wid;
+						_ptadd.y -= hei;
 					}
 				}
 			}
@@ -312,6 +348,27 @@ void player::angleup(void)
 void player::frameup(void)
 {
 	if (_ch.frameX < _baseframeX && !_dodge) { _ch.frameX = _baseframeX; }
+	if (_pl.hit)
+	{
+		++_pl.hitcount;
+		if (_pl.hitcount >= 60)
+		{
+			_pl.hitcount = 0;
+			_pl.hit = false;
+		}
+	}
+	if (_pl.teleporting)
+	{
+		_ch.x = DATABASE->moveTo.x;
+		_ch.y = DATABASE->moveTo.y;
+
+		int wid = DATABASE->moveTo.x - DATABASE->past.x;
+		int hei = DATABASE->moveTo.y - DATABASE->past.y;
+
+		_ptadd.x += wid;
+		_ptadd.y += hei;
+		_pl.teleporting = false;
+	}
 	if (_bfire)
 	{
 		++_blankcount;
@@ -336,7 +393,7 @@ void player::frameup(void)
 		++_ch.gframecount;
 		if (_ch.gframecount >= 5)
 		{
-			if (_ch.gframeX == 0) { _bullet->fire(_ch.x, _ch.y, _ch.angle, _direc); }
+			//if (_ch.gframeX == 0) { _bullet->fire(_ch.x, _ch.y, _ch.angle, _direc); }
 			++_ch.gframeX;
 			_ch.gframecount = 0;
 			if (_ch.gframeX >= 4)
@@ -485,6 +542,7 @@ void player::colision(void)
 {
 	for (int i = 0; i < _obm->getObjectvector().size(); ++i)
 	{
+		if (_obm->getObjectvector()[i]->getObjectData().borken) { continue; }
 		if (_obm->getObjectvector()[i]->getObjectData().type == TABLE_WIDTH ||
 			_obm->getObjectvector()[i]->getObjectData().type == TABLE_LENGTH)
 		{

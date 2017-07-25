@@ -26,6 +26,8 @@ public:
 	virtual void playerColision(void);
 
 	inline player* &getPlayer(void) { return _pl; }
+	inline vector<character*> &getCharacterVector(void) { return _vCharacter; }
+	virtual bulletE* &getBullet(void) { return _ebullet; }
 
 	characterManager();
 	virtual ~characterManager();

@@ -40,6 +40,7 @@ void gungeonScene::update(void)
 	_om->update();
 	objectColision();
 	_cam->update();
+	if (_mapOpen) { iconup(); }
 
 	for (int y = _cam->getRC().bottom - 30, i = 0; i < 12; ++i, y -= _sheel->getFrameHeight())
 	{
@@ -95,18 +96,57 @@ void gungeonScene::setup(void)
 		_weaponcase = IMAGEMANAGER->findImage("weapon");
 		_sheel = IMAGEMANAGER->findImage("sheel");
 		_ui = IMAGEMANAGER->findImage("ui");
+		_telepot = IMAGEMANAGER->findImage("telpo");
+		_icon = IMAGEMANAGER->findImage("icon");
 	}
-
-	_cm = new characterManager;
-	_cm->init(_campt.x, _campt.y);
+	//첫번째 통로 개방
+	for (int y = 0; y < TILEY; ++y)
+	{
+		for (int x = 0; x < TILEX; ++x)
+		{
+			if (_Tile[y][x].roomnum != 1) { continue; }
+			_Tile[y][x].show = true;
+		}
+	}
 
 	_om = new objectManager;
 	_om->init();
+
+	_cm = new characterManager;
+	_cm->init(_campt.x, _campt.y);
 
 	_cm->getPlayer()->setObject(_om);
 
 	_cam = new camera;
 	_cam->init(&_campt, _cm->getPlayer(), _cimg, true);
+
+	_cm->getBullet()->setCharacterManager(_cm);
+	_cm->getBullet()->setObjectManager(_om);
+	_cm->getBullet()->setPlayer(_cm->getPlayer());
+
+	telepoter* tp;
+
+	//물질이동기 생성
+	for (int i = 0; i < _om->getObjectvector().size(); ++i)
+	{
+		if (_om->getObjectvector()[i]->getObjectData().type == TELEPOTER)
+		{
+			tp = (telepoter*)_om->getObjectvector()[i];
+			tagTel tempTel;
+			tempTel.x = tp->getObjectData().x;
+			tempTel.y = tp->getObjectData().y;
+			tempTel.rc = RectMake(tempTel.x, tempTel.y, _telepot->getFrameWidth(), _telepot->getFrameHeight());
+			tempTel.frameX = &tp->getObjectData().frameX;
+			tempTel.frameY = &tp->getObjectData().frameY;
+			tempTel.turnon = &tp->getTpData().turnon;
+			tempTel.activated = &tp->getTpData().activated;
+			RECT temprc = RectMake((_cam->getRC().left + 100) + ((tempTel.x / TILESIZE) * _TILEMINISIZE),
+				(_cam->getRC().top + 80) + ((tempTel.y / TILESIZE) * _TILEMINISIZE),
+				_icon->getWidth(), _icon->getHeight());
+			_telicon.push_back(temprc);
+			_telimg.push_back(tempTel);
+		}
+	}
 
 	//현재총 렉트 그리자
 	for (int y = _cam->getRC().bottom - 30, i = 0; i < 12; ++i, y -= _sheel->getFrameHeight())
@@ -146,6 +186,37 @@ void gungeonScene::keycontrol(void)
 	if (KEYMANAGER->isOnceKeyDown('M'))
 	{
 		_mapOpen = (_mapOpen == false) ? true : false;
+		_minimapdraw = true;
+	}
+
+	if (KEYMANAGER->isOnceKeyDown(VK_LBUTTON))
+	{
+		for (int i = 0; i < _telicon.size(); ++i)
+		{
+			POINT tempPt = _mouse;
+			tempPt.x -= 61;
+			tempPt.y -= 22;
+			if (PtInRect(&_telicon[i], tempPt))
+			{
+				DATABASE->past.x = _cm->getPlayer()->getCharacterData().x;
+				DATABASE->past.y = _cm->getPlayer()->getCharacterData().y;
+				DATABASE->moveTo.x = _telimg[i].x + TILESIZE;
+				DATABASE->moveTo.y = _telimg[i].y + TILESIZE;
+				*_telimg[i].frameY = 5;
+				*_telimg[i].activated = true;
+				_cm->getPlayer()->getPlayerData().teleporting = true;
+			}
+		}
+	}
+}
+
+void gungeonScene::iconup(void)
+{
+	for (int i = 0; i < _telicon.size(); ++i)
+	{
+		_telicon[i] = RectMake((_cam->getRC().left + 100) + ((_telimg[i].x / TILESIZE) * _TILEMINISIZE),
+			(_cam->getRC().top + 80) + ((_telimg[i].y / TILESIZE) * _TILEMINISIZE),
+			_icon->getWidth(), _icon->getHeight());
 	}
 }
 
@@ -168,7 +239,15 @@ void gungeonScene::draw(void)
 	if (ey > TILEY) { ey = TILEY; }
 	if (ex > TILEX) { ex = TILEX; }
 
+	//기본 배경
 	_field->render(getBackDC(), _cam->getRC().left, _cam->getRC().top, _cam->getRC().left, _cam->getRC().top, WINSIZEX, WINSIZEY);
+	//물질이동기
+	for (int i = 0; i < _telimg.size(); ++i)
+	{
+		if (!IntersectRect(&RectMake(0, 0, 0, 0), &_telimg[i].rc, &_cam->getRC())) { continue; }
+		_telepot->frameRender(getBackDC(), _telimg[i].x, _telimg[i].y, *_telimg[i].frameX, *_telimg[i].frameY);
+	}
+
 
 	_cm->render(getBackDC());
 	_om->render(getBackDC());
@@ -289,29 +368,52 @@ void gungeonScene::draw(void)
 	TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top + 40, str, strlen(str));
 
 	//미니맵
-	if (_mapOpen) { minimap(); }
+	if (_mapOpen)
+	{
+		minimap();
+		for (int i = 0; i < _telicon.size(); ++i)
+		{
+			if (*_telimg[i].turnon)
+			{
+				_icon->render(getBackDC(), _telicon[i].left, _telicon[i].top);
+				//Rectangle(getBackDC(), _telicon[i].left, _telicon[i].top, _telicon[i].right, _telicon[i].bottom);
+				sprintf(str, "iX좌표 : %d iY좌표 : %d", _telicon[i].left, _telicon[i].top);
+				TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top + 60, str, strlen(str));
+			}
+		}
+	}	
 }
 
 void gungeonScene::minimap(void)
 {
-	HBRUSH bluebrush = CreateSolidBrush(RGB(0, 0, 255));
-	HBRUSH withebrush = CreateSolidBrush(RGB(255, 255, 255));
-	_black->render(_miniimg->getMemDC());
-	for (int y = 0; y < TILEY; ++y)
+	if (_minimapdraw)
 	{
-		for (int x = 0; x < TILEX; ++x)
+		HBRUSH bluebrush = CreateSolidBrush(RGB(0, 0, 255));
+		HBRUSH withebrush = CreateSolidBrush(RGB(255, 255, 255));
+
+		_black->render(_miniimg->getMemDC());
+
+		for (int y = 0; y < TILEY; ++y)
 		{
-			if (!_Tile[y][x].show) { continue; }
-			if (_tile[y][x].wall != VOID_WALL)
+			for (int x = 0; x < TILEX; ++x)
 			{
-				FillRect(_miniimg->getMemDC(), &_Tile[y][x].minirc, withebrush);
-			}
-			if (_Tile[y][x].terrain != EMPTY)
-			{
-				FillRect(_miniimg->getMemDC(), &_Tile[y][x].minirc, bluebrush);
+				if (!_Tile[y][x].show) { continue; }
+				if (_Tile[y][x].wall != VOID_WALL)
+				{
+					FillRect(_miniimg->getMemDC(), &_Tile[y][x].minirc, withebrush);
+				}
+				if (_Tile[y][x].terrain != EMPTY)
+				{
+					FillRect(_miniimg->getMemDC(), &_Tile[y][x].minirc, bluebrush);
+				}
 			}
 		}
+
+		DeleteObject(bluebrush);
+		DeleteObject(withebrush);
+		_minimapdraw = false;
 	}
+	
 	RECT mmaprc = RectMake(_cam->getRC().left + 100, _cam->getRC().top + 80, 800, 600);
 
 	POINT mtemp;
@@ -325,7 +427,4 @@ void gungeonScene::minimap(void)
 	LineMake(getBackDC(), ftemp.right, ftemp.top, ftemp.right, ftemp.bottom);
 	LineMake(getBackDC(), ftemp.right, ftemp.bottom, ftemp.left, ftemp.bottom);
 	LineMake(getBackDC(), ftemp.left, ftemp.bottom, ftemp.left, ftemp.top);
-
-	DeleteObject(bluebrush);
-	DeleteObject(withebrush);
 }

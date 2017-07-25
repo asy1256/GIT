@@ -3,6 +3,7 @@
 #include "gameNode.h"
 #include "door.h"
 #include "table.h"
+#include "telepoter.h"
 
 class objectManager : public gameNode
 {

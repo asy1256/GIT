@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 #include "bullets.h"
+#include "objectManager.h"
+#include "characterManager.h"
 
 bullet::bullet(void)
 {
@@ -170,12 +172,11 @@ bulletE::~bulletE(void)
 }
 
 //공용으로 쓰는 총알 (쏠때마다 만들고 삭제한다)
-HRESULT bulletE::init(const char* imageName, float range)
+HRESULT bulletE::init(float range, bool* move)
 {
 	gameNode::init();
-
-	_imageName = imageName;
 	_range = range;
+	_plmove = move;
 
 	return S_OK;
 }
@@ -194,39 +195,113 @@ void bulletE::update(void)
 	move();
 }
 
-void bulletE::render(void)
+void bulletE::render(HDC hdc)
 {
-	draw();
+	draw(hdc);
 }
 
-void bulletE::fire(float x, float y, float angle, float speed)
+void bulletE::fire(float x, float y, float angle, float speed, fireDirection direction, int who)
 {
-	tagBullet bullets;
-	ZeroMemory(&bullets, sizeof(tagBullet));
-
-	bullets.img = IMAGEMANAGER->findImage(_imageName);
-	bullets.speed = speed;
-	bullets.angle = angle;
-	//bullets.radius = bullets.img->getWidth() / 2;
-	bullets.x = bullets.fireX = x;
-	bullets.y = bullets.fireY = y;
-	bullets.rc = RectMakeCenter(bullets.x, bullets.y,
-		bullets.img->getWidth(), bullets.img->getHeight());
-	_vBullet.push_back(bullets);
+	tagBullet bullet;
+	ZeroMemory(&bullet, sizeof(tagBullet));
+	bullet.direction = direction;
+	bullet.who = who;
+	bullet.fire = true;
+	bullet.count = 0;
+	bullet.angle = angle;
+	bullet.speed = speed;
+	if (who == 1) //플레이어
+	{
+		bullet.img = IMAGEMANAGER->findImage("pBullet");
+		bullet.x = bullet.fireX = x + cosf(angle) * (IMAGEMANAGER->findImage("mPistol")->getFrameWidth() + IMAGEMANAGER->findImage("marin")->getFrameWidth() / 2);
+		bullet.y = bullet.fireY = y + (-sinf(angle) * IMAGEMANAGER->findImage("mPistol")->getFrameHeight());
+	}
+	if (who == 2) //총탄KIN
+	{
+		bullet.img = IMAGEMANAGER->findImage("eBullet");
+		bullet.x = bullet.fireX = x + cosf(angle) * (IMAGEMANAGER->findImage("kPistol")->getFrameWidth() + IMAGEMANAGER->findImage("kin")->getFrameWidth() / 2);
+		bullet.y = bullet.fireY = y + (-sinf(angle) * IMAGEMANAGER->findImage("kPistol")->getFrameHeight());
+	}
+	bullet.rc = RectMakeCenter(x, y, bullet.img->getFrameWidth(), bullet.img->getFrameHeight());
+	_vBullet.push_back(bullet);
 }
 
 void bulletE::move(void)
 {
+	RECT rc = RectMake(0,0,0,0);
+	vector<character*> _vC = _cm->getCharacterVector();
+	vector<Object*> _vO = _om->getObjectvector();
+	table* tb;
+
 	for (_viBullet = _vBullet.begin(); _viBullet != _vBullet.end();)
 	{
-		_viBullet->x += cosf(_viBullet->angle) * _viBullet->speed;
-		_viBullet->y += -sinf(_viBullet->angle) * _viBullet->speed;
+		if (*_plmove)
+		{
+			_viBullet->x += cosf(_viBullet->angle) * (_viBullet->speed + 6);
+			_viBullet->y += -sinf(_viBullet->angle) * (_viBullet->speed + 6);
+		}
+		else
+		{
+			_viBullet->x += cosf(_viBullet->angle) * _viBullet->speed;
+			_viBullet->y += -sinf(_viBullet->angle) * _viBullet->speed;
+		}
 
 		_viBullet->rc = RectMakeCenter(_viBullet->x, _viBullet->y,
 			_viBullet->img->getWidth(), _viBullet->img->getHeight());
 
+		//캐릭터 피격판정
+		if (_viBullet->who == 1)
+		{
+			for (int i = 0; i < _vC.size(); ++i)
+			{
+				if (IntersectRect(&rc, &_vC[i]->getCharacterData().rc, &_viBullet->rc) &&
+					_vC[i]->getCharacterData().life && _viBullet->fire && _vC[i]->getCharacterData().obj != NONE)
+				{
+					_viBullet->fire = false;
+					--_vC[i]->getCharacterData().hp;
+					if (_vC[i]->getCharacterData().hp <= 0)
+					{
+						_vC[i]->getCharacterData().hp = 0;
+						_vC[i]->getCharacterData().life = false;
+					}
+				}
+			}
+		}
+		else
+		{
+			if (IntersectRect(&rc, &_pl->getCharacterData().rc, &_viBullet->rc) && _viBullet->fire &&
+				_pl->getCharacterData().life)
+			{
+				_viBullet->fire = false;
+				_pl->getPlayerData().hit = true;
+				--_pl->getCharacterData().hp;
+				if (_pl->getCharacterData().hp <= 0)
+				{
+					_pl->getCharacterData().life = false;
+				}
+			}
+		}
+
+		for (int i = 0; i < _vO.size(); ++i)
+		{
+			if (_vO[i]->getObjectData().type == TABLE_WIDTH || _vO[i]->getObjectData().type == TABLE_LENGTH)
+			{
+				if (_vO[i]->getObjectData().borken) { continue; }
+				tb = (table*)_vO[i];
+				if (IntersectRect(&rc, &tb->getTableData().hrc, &_viBullet->rc) && tb->getTableData().stand && !tb->getObjectData().borken)
+				{
+					_viBullet->fire = false;
+					if (!tb->getTableData().hit)
+					{
+						--tb->getTableData().hp;
+						tb->getTableData().hit = true;
+					}	
+				}
+			}
+		}
+
 		//사거리 밖으로 나가면...
-		if (_range < getDistance(_viBullet->fireX, _viBullet->fireY, _viBullet->x, _viBullet->y))
+		if (_range < getDistance(_viBullet->fireX, _viBullet->fireY, _viBullet->x, _viBullet->y) || !_viBullet->fire)
 		{
 			_viBullet = _vBullet.erase(_viBullet++);
 		}
@@ -234,11 +309,11 @@ void bulletE::move(void)
 	}
 }
 
-void bulletE::draw(void)
+void bulletE::draw(HDC hdc)
 {
 	for (_viBullet = _vBullet.begin(); _viBullet != _vBullet.end(); ++_viBullet)
 	{
-		_viBullet->img->render(getMemDC(), _viBullet->rc.left, _viBullet->rc.top);
+		_viBullet->img->render(hdc, _viBullet->rc.left, _viBullet->rc.top);
 	}
 }
 

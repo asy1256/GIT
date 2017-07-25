@@ -15,6 +15,7 @@ HRESULT table::init(float x, float y, OBJECT type)
 	_tb.action = _tb.stand = _tb.hit =  false;
 	_tb.left = _tb.right = _tb.up = _tb.down = false;
 	_tb.hp = 14;
+	_tb.hitcount = 0;
 	_tb.hrc = RectMake(0, 0, 0, 0);
 
 	_ob.type = type;
@@ -33,6 +34,7 @@ HRESULT table::init(float x, float y, OBJECT type)
 		_ob.crc = RectMakeCenter(_ob.x, _ob.y + 22, 62, 120);
 	}
 	_ob.rc = RectMakeCenter(_ob.x, _ob.y, _ob.img->getFrameWidth(), _ob.img->getFrameHeight());
+	_ob.borken = false;
 
 
 	return S_OK;
@@ -144,10 +146,21 @@ void table::standup(void)
 
 void table::hitup(void)
 {
+	if (_tb.hit)
+	{
+		++_tb.hitcount;
+		if (_tb.hitcount >= 30)
+		{
+			_tb.hitcount = 0;
+			_tb.hit = false;
+		}
+	}
+
 	if (_ob.frameX != 11)
 	{
 		if (_tb.hp <= 0)
 		{
+			_ob.borken = true;
 			_tb.hp = 0;
 			++_ob.framecount;
 			if (_ob.framecount >= 6)
@@ -157,11 +170,11 @@ void table::hitup(void)
 				if (_ob.frameX >= 12) { _ob.frameX = 11; }
 			}
 		}
-		else if (_tb.hp <= 7)
+		else if (_tb.hp <= 4)
 		{
 			_ob.frameX = 8;
 		}
-		else if (_tb.hp <= 13)
+		else if (_tb.hp <= 11)
 		{
 			_ob.frameX = 7;
 		}

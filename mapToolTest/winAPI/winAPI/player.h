@@ -13,15 +13,15 @@ private:
 		int money;
 		int blankshot;
 		int key;
+		int hitcount;
+		bool teleporting, hit;
 	};
 
 private:
 	tagPlayer _pl;
-	fireDirection _direc;
 	int _baseframeX, _baseframeY;
 	int _degree, _ammo, _blankcount;
 	float _reloadtime, _currentreloadtime, _nowloading;
-	bool _dodge, _move, _fire, _bfire, _reload;
 
 	image* _reloadgage;
 	image* _reloadbar;
@@ -31,7 +31,9 @@ private:
 	bullet* _bullet;
 	objectManager* _obm;
 public:
+	bool _dodge, _move, _fire, _bfire, _reload;
 	bool _right, _up, _left, _down;
+	fireDirection _direc;
 public:
 	virtual HRESULT init(float x, float y);
 	virtual void release(void);

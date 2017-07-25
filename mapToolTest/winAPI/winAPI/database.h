@@ -32,6 +32,9 @@ private:
 
 public:
 	POINT spon = PointMake(0, 0);
+	POINT past = PointMake(0, 0);
+	POINT moveTo = PointMake(0, 0);
+	POINT moveadd = PointMake(0, 0);
 
 public:
 	HRESULT init(void);

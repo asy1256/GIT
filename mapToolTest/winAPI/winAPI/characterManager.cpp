@@ -40,7 +40,7 @@ HRESULT characterManager::init(float x, float y)
 	}
 
 	_ebullet = new bulletE;
-	_ebullet->init("ebullet", 600);
+	_ebullet->init(600, &_pl->_move);
 
 	return S_OK;
 }
@@ -74,13 +74,18 @@ void characterManager::update(void)
 	{
 		_ebullet->getBullet().clear();
 	}
-
+	if (_pl->getCharacterData().gframeX == 0 && _pl->getCharacterData().gframecount == 1)
+	{
+		_ebullet->fire(_pl->getCharacterData().x, _pl->getCharacterData().y, _pl->getCharacterData().angle, 10.0f,
+			_pl->_direc, 1);
+	}
 
 	_ebullet->update();
 }
 
 void characterManager::render(HDC hdc)
 {
+	_ebullet->render(hdc);
 	for (int i = 0; i < _vCharacter.size(); ++i)
 	{
 		_vCharacter[i]->render(hdc);

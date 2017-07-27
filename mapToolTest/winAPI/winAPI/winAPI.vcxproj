@@ -81,6 +81,7 @@
     <ClInclude Include="aStar.h" />
     <ClInclude Include="bulletB.h" />
     <ClInclude Include="bulletK.h" />
+    <ClInclude Include="bulletKing.h" />
     <ClInclude Include="bullets.h" />
     <ClInclude Include="button.h" />
     <ClInclude Include="camera.h" />
@@ -95,6 +96,7 @@
     <ClInclude Include="gameStudy.h" />
     <ClInclude Include="globalData.h" />
     <ClInclude Include="gungeonScene.h" />
+    <ClInclude Include="gunnut.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="imageManager.h" />
     <ClInclude Include="iniDataManager.h" />
@@ -128,6 +130,7 @@
     <ClCompile Include="aStar.cpp" />
     <ClCompile Include="bulletB.cpp" />
     <ClCompile Include="bulletK.cpp" />
+    <ClCompile Include="bulletKing.cpp" />
     <ClCompile Include="bullets.cpp" />
     <ClCompile Include="button.cpp" />
     <ClCompile Include="camera.cpp" />
@@ -141,6 +144,7 @@
     <ClCompile Include="gameStudy.cpp" />
     <ClCompile Include="gungeonScene.cpp" />
     <ClCompile Include="gungeonSceneColision.cpp" />
+    <ClCompile Include="gunnut.cpp" />
     <ClCompile Include="image.cpp" />
     <ClCompile Include="imageManager.cpp" />
     <ClCompile Include="iniDataManager.cpp" />

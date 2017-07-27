@@ -31,6 +31,12 @@ private:
 	arrElement _mTotalElement;
 
 public:
+	int roomcount = 0;
+	int nowroom = 0;
+	bool blank = false;
+	vector<bool> roomclear;
+	vector<bool> roomfight;
+	vector<int> roomsequnce;
 	POINT spon = PointMake(0, 0);
 	POINT past = PointMake(0, 0);
 	POINT moveTo = PointMake(0, 0);
@@ -62,4 +68,3 @@ public:
 	database(void);
 	~database(void);
 };
-

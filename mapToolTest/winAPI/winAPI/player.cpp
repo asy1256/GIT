@@ -47,8 +47,8 @@ HRESULT player::init(float x, float y)
 	_ch.rc = RectMakeCenter(_ch.x, _ch.y, _ch.img->getFrameWidth(), _ch.img->getFrameHeight());
 	_ch.crc = RectMake(_ch.rc.left, _ch.rc.bottom - 20, _ch.img->getFrameWidth(), 20);
 	_ch.grc = RectMakeCenter(_ch.rc.right, _ch.y, _ch.gun->getFrameWidth(), _ch.gun->getFrameHeight());
-	_ch.idX = _ch.x / TILESIZE;
-	_ch.idY = _ch.crc.top + 10 / TILESIZE;
+	_ch.idX = (_ch.crc.left + 20) / TILESIZE;
+	_ch.idY = (_ch.crc.top + 10) / TILESIZE;
 
 	_reloadingbar = RectMakeCenter(_ch.x, _ch.rc.top - _reloadgage->getHeight(), _reloadgage->getWidth(), _reloadgage->getHeight());
 	_nowloading = (_currentreloadtime / _reloadtime) * _reloadgage->getWidth();
@@ -85,8 +85,8 @@ void player::update(void)
 	{
 		_ch.grc = RectMakeCenter(_ch.rc.left - _ch.gun->getFrameWidth() + 20, _ch.y + 10, _ch.gun->getFrameWidth(), _ch.gun->getFrameHeight());
 	}
-	_ch.idX = _ch.x / TILESIZE;
-	_ch.idY = (_ch.crc.top + 10) / TILESIZE;
+	_ch.idX = (_ch.crc.left + 20) / TILESIZE;
+	_ch.idY = (_ch.crc.bottom - 5) / TILESIZE;
 
 	if (_reload)
 	{
@@ -161,7 +161,7 @@ void player::keycontrol(void)
 	//°øÆ÷Åº
 	if (KEYMANAGER->isOnceKeyDown('Q'))
 	{
-		if (!_bfire) { _bfire = true; }
+		if (!_bfire && _pl.blankshot != 0) { _bfire = true; DATABASE->blank = true; --_pl.blankshot; }
 	}
 	//¹ä»óµÚÁý°Å³ª ¹¹ µî µî ÇØº¾½Ã´Ù.
 	if (KEYMANAGER->isOnceKeyDown('E'))
@@ -183,6 +183,7 @@ void player::keycontrol(void)
 						if (rc.bottom == temp->getObjectData().rc.bottom) { temp->getTableData().up = true; temp->getObjectData().frameY = 1; }
 						if (rc.right == temp->getObjectData().rc.right) { temp->getTableData().left = true; temp->getObjectData().frameY = 2; }
 						if (rc.left == temp->getObjectData().rc.left) { temp->getTableData().right = true; temp->getObjectData().frameY = 0; }
+						break;
 					}
 				}
 				if (_obm->getObjectvector()[i]->getObjectData().type == TELEPOTER)
@@ -204,6 +205,7 @@ void player::keycontrol(void)
 
 						_ptadd.x -= wid;
 						_ptadd.y -= hei;
+						break;
 					}
 				}
 			}

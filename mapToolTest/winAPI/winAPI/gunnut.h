@@ -1,9 +1,13 @@
 #pragma once
 #include "character.h"
-class bulletB : public character
+class gunnut :
+	public character
 {
 private:
 	tagMonsters _bk;
+	fireDirection _sdirec;
+
+	RECT _drc;
 
 public:
 	virtual HRESULT init(float x, float y, OBJECT obj, int roomnum, int spawn, int* plX, int* plY, bool* blankshot);
@@ -19,7 +23,6 @@ public:
 	virtual tagCharacter &getCharacterData(void) { return _ch; }
 	virtual tagMonsters &getMonsterData(void) { return _bk; }
 
-	bulletB();
-	virtual ~bulletB();
+	gunnut();
+	virtual ~gunnut();
 };
-

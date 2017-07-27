@@ -31,6 +31,7 @@ enum selecttilekind
 	W_TABLE,
 	K_BULLET,
 	B_BULLET,
+	KING_BULLET,
 	R_SHOTGUN,
 	GUNUT,
 	START_ROOM,
@@ -72,15 +73,18 @@ private:
 	image* _no;
 	image* _cover;
 	image* _bigsamplecase;
+	image* _bosscase;
 	image* _mapoption;
 	image* _bigsampleimg;
 	image* _enemysampleimg;
+	image* _bosssampleimg;
 	image* _roomsampleimg;
 	image* _booktag;
 	image* _scrollbardown;
 	image* _scrollbar;
 	image* _barrels;
 	image* _enemys;
+	image* _boss;
 private:
 
 	tagTile _tile[TILEY][TILEX];		//타일
@@ -96,6 +100,7 @@ private:
 	RECT _dragrc;						//드래그 영역 그려줄 렉트
 	tagbigsample _bigsample[5][2];		//샘플 이미지 그려줄 RC
 	tagbigsample _enemysample[2][2];	//적군 샘플 그려줄 RC
+	tagbigsample _bosssample;			//보스 샘플 그려줄 RC
 	tagbigsample _roomsample[2][2];		//방 샘플 그려줄 RC
 	tagbigsample _option[5];			//맵툴 옵션 버튼
 

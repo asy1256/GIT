@@ -59,15 +59,18 @@ void mapTool::setup(void)
 		_no = IMAGEMANAGER->findImage("no");
 		_cover = IMAGEMANAGER->findImage("cover");
 		_bigsamplecase = IMAGEMANAGER->findImage("bigsamplecase");
+		_bosscase = IMAGEMANAGER->findImage("bosscase");
 		_mapoption = IMAGEMANAGER->findImage("mapoption");
 		_bigsampleimg = IMAGEMANAGER->findImage("bigsample");
 		_enemysampleimg = IMAGEMANAGER->findImage("enemysample");
+		_bosssampleimg = IMAGEMANAGER->findImage("bosssample");
 		_roomsampleimg = IMAGEMANAGER->findImage("roomsample");
 		_booktag = IMAGEMANAGER->findImage("booktag");
 		_scrollbardown = IMAGEMANAGER->findImage("scrollbardown");
 		_scrollbar = IMAGEMANAGER->findImage("scrollbar");
 		_barrels = IMAGEMANAGER->findImage("barrels");
 		_enemys = IMAGEMANAGER->findImage("enemys");
+		_boss = IMAGEMANAGER->findImage("bossimg");
 	}
 	//다양한 변수 초기화
 	{
@@ -143,6 +146,13 @@ void mapTool::setup(void)
 				_bigsamplecase->getFrameWidth(), _bigsamplecase->getFrameHeight());
 		}
 	}
+
+	//보스샘플케이스 초기화
+	_bosssample.type = STICK;
+	_bosssample.kind = KING_BULLET;
+	_bosssample.select = false;
+	_bosssample.rc = RectMake(_cam->getRC().right - 350 + 20, _cam->getRC().top + 94,
+		_bosscase->getFrameWidth(), _bosscase->getFrameHeight());
 
 	//맵툴 옵션 초기화
 	for (int sy = 94, y = 0; y < 5; ++y, sy += 118)
@@ -414,6 +424,17 @@ void mapTool::tileselect(void)
 			}
 		}
 	}
+	//보스 페이지
+	if (_page == 3)
+	{
+		if (PtInRect(&_bosssample.rc, _mouse))
+		{
+			_bosssample.select = true;
+			_nowselecct = _bosssample.kind;
+			_nowdraw = _bosssample.type;
+		}
+		else { _bosssample.select = false; }
+	}
 	//방 페이지
 	if (_page == 4)
 	{
@@ -452,7 +473,7 @@ void mapTool::tileselect(void)
 				//세이브
 				if (y == 3)
 				{
-					HANDLE file, file2;
+					HANDLE file, file2, file3;
 					DWORD write;
 
 					file = CreateFile("stageOne", GENERIC_WRITE, 0, NULL,
@@ -465,13 +486,19 @@ void mapTool::tileselect(void)
 
 					WriteFile(file2, &DATABASE->spon, sizeof(POINT), &write, NULL);
 
+					file3 = CreateFile("roomscale", GENERIC_WRITE, 0, NULL,
+						CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+					WriteFile(file3, &_makeroom, sizeof(int), &write, NULL);
+
 					CloseHandle(file);
 					CloseHandle(file2);
+					CloseHandle(file3);
 				}
 				//로드
 				if (y == 4)
 				{
-					HANDLE file, file2;
+					HANDLE file, file2, file3;
 					DWORD read;
 
 					file = CreateFile("stageOne", GENERIC_READ, 0, NULL,
@@ -483,8 +510,15 @@ void mapTool::tileselect(void)
 						OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 					ReadFile(file2, &DATABASE->spon, sizeof(POINT), &read, NULL);
+
+					file3 = CreateFile("roomscale", GENERIC_READ, 0, NULL,
+						OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+					ReadFile(file3, &_makeroom, sizeof(int), &read, NULL);
+
 					CloseHandle(file);
 					CloseHandle(file2);
+					CloseHandle(file3);
 				}
 				_option[y].select = true;
 				_nowselecct = _option[y].kind;
@@ -574,6 +608,15 @@ void mapTool::tiledraw(void)
 			if (_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx].wall == VOID_WALL)
 			{
 				_tile[nowy][nowx].obj = (_nowselecct == R_SHOTGUN) ? SHOTGUN_RED : GUN_NUT;
+				_tile[nowy][nowx].sponSequence = 1;
+			}
+		}
+		//보스
+		if (_nowselecct == KING_BULLET)
+		{
+			if (_tile[nowy][nowx].obj == NONE && _tile[nowy][nowx].wall == VOID_WALL)
+			{
+				_tile[nowy][nowx].obj = BULLET_KING;
 				_tile[nowy][nowx].sponSequence = 1;
 			}
 		}
@@ -1707,6 +1750,9 @@ void mapTool::bookup(void)
 		_option[y].rc = RectMake(_cam->getRC().right - 350, _cam->getRC().top + sy,
 			_mapoption->getFrameWidth(), _mapoption->getFrameHeight());
 	}
+	//보스 샘플 위치 갱신
+	_bosssample.rc = RectMake(_cam->getRC().right - 350 + 20, _cam->getRC().top + 94,
+		_bosscase->getFrameWidth(), _bosscase->getFrameHeight());
 	//스크롤바 갱신
 	_scroolpos = (_currentscrool / _scroolmax) * 512;
 }
@@ -1778,6 +1824,11 @@ void mapTool::draw(void)
 				_enemys->frameRender(getBackDC(), _tile[y][x].rc.left - 32, _tile[y][x].rc.top - 64, 1, 1);
 				TextOut(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - 48, str, strlen(str)); continue;
 			}
+			else if (_tile[y][x].obj == BULLET_KING) //보스면 그리고 넘어가
+			{
+				_boss->render(getBackDC(), _tile[y][x].rc.left - 32, _tile[y][x].rc.top - TILESIZE);
+				TextOut(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top - TILESIZE, str, strlen(str)); continue;
+			}
 			_sample->frameRender(getBackDC(), _tile[y][x].rc.left, _tile[y][x].rc.top, _tile[y][x].objframeX, _tile[y][x].objframeY);
 		}
 	}
@@ -1828,6 +1879,13 @@ void mapTool::draw(void)
 					_enemysampleimg->frameRender(getBackDC(), _enemysample[y][x].rc.left + 10, _enemysample[y][x].rc.top + 30, x, y);
 				}
 			}
+		}
+		//보스
+		if (_page == 3)
+		{
+			if (_bosssample.select) { _bosscase->frameRender(getBackDC(), _bosssample.rc.left, _bosssample.rc.top, 1, 0); }
+			else { _bosscase->frameRender(getBackDC(), _bosssample.rc.left, _bosssample.rc.top, 0, 0); }
+			_boss->render(getBackDC(), _bosssample.rc.left + 60, _bosssample.rc.top + 40);
 		}
 		//방
 		if (_page == 4)

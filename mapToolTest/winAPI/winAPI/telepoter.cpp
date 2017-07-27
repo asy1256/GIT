@@ -9,20 +9,21 @@ telepoter::~telepoter()
 {
 }
 
-HRESULT telepoter::init(float x, float y, OBJECT type)
+HRESULT telepoter::init(float x, float y, OBJECT type, int roomnum)
 {
 	Object::init(x, y, type);
 
 	_tp.action = _tp.activated = _tp.turnon = false;
 
+	_ob.roomnum = roomnum;
 	_ob.type = type;
 	_ob.img = IMAGEMANAGER->findImage("telpo");
 	_ob.x = x;
 	_ob.y = y;
 	_ob.rc = RectMake(_ob.x, _ob.y, _ob.img->getFrameWidth(), _ob.img->getFrameHeight());
 
-	_ob.frameY = 3;
-	_tp.turnon = true;
+	//_ob.frameY = 3;
+	//_tp.turnon = true;
 
 	return S_OK;
 }
@@ -42,6 +43,8 @@ void telepoter::render(HDC hdc)
 
 void telepoter::frameup(void)
 {
+	if (DATABASE->roomclear[_ob.roomnum - 1] && !_tp.action) { _tp.action = true; }
+
 	//텔레포터 활성화
 	if (_tp.action && !_tp.turnon)
 	{

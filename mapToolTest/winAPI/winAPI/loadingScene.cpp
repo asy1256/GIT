@@ -28,6 +28,9 @@ HRESULT loadingScene::init(void)
 	_loading->loadImage("no", "tileno.bmp", 64, 64, true, RGB(255, 0, 255));
 	_loading->loadImage("cover", "bookcover.bmp", 400, 768, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("bigsamplecase", "bigsamplecase.bmp", 280, 220, 2, 1, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("bosscase", "bosssamplecase.bmp", 480, 210, 2, 1, true, RGB(255, 0, 255));
+	_loading->loadImage("bossimg", "boss.bmp", 128, 128, true, RGB(255, 0, 255));
+	_loading->loadImage("bosssample", "bosssample.bmp", 220, 150, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("mapoption", "mapoption.bmp", 600, 540, 2, 5, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("bigsample", "bigsample.bmp", 240, 800, 2, 5, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("enemysample", "enemysample.bmp", 240, 320, 2, 2, true, RGB(255, 0, 255));
@@ -40,12 +43,15 @@ HRESULT loadingScene::init(void)
 
 	//인게임에서 사용할 캐릭터들과 오브젝트 및 총기 이미지 등등
 	_loading->loadFrameImage("marin", "Player.bmp", 1008, 640, 16, 8, true, RGB(255, 0, 255));
-	_loading->loadFrameImage("kin", "bullet_kin.bmp", 448, 384, 7, 4, true, RGB(255, 0, 255));
-	_loading->loadFrameImage("bandana", "bullet_bandana.bmp", 448, 384, 7, 4, true, RGB(255, 0, 255));
-	_loading->loadFrameImage("red", "shotgun_red.bmp", 448, 512, 7, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("kin", "bullet_kin.bmp", 301, 256, 7, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("bandana", "bullet_bandana.bmp", 301, 256, 7, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("king", "bullet_king.bmp", 2178, 924, 11, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("red", "shotgun_red.bmp", 301, 344, 7, 4, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("gunnut", "gunnut.bmp", 3024, 3528, 12, 12, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("mPistol", "m_pistol.bmp", 128, 40, 4, 2, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("kPistol", "k_pistol.bmp", 200, 64, 4, 2, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("bPistol", "b_pistol.bmp", 102, 64, 3, 2, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("rShotgun", "shotgun.bmp", 630, 72, 7, 2, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("wTable", "w_table.bmp", 1992, 612, 12, 4, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("hTable", "h_table.bmp", 1944, 820, 12, 4, true , RGB(255,0,255));
 	_loading->loadFrameImage("wDoor", "w_door.bmp", 432, 384, 4, 2, true, RGB(255, 0, 255));
@@ -53,6 +59,8 @@ HRESULT loadingScene::init(void)
 	_loading->loadFrameImage("sheel", "sheel.bmp", 56, 40, 2, 2, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("ui", "ui.bmp", 336, 42, 7, 1, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("telpo", "telepoter.bmp", 640, 896, 5, 7, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("spawn", "spawn.bmp", 2115, 246, 15, 1, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("bossbattle", "bossbattle.bmp", 6144, 768, 6, 1, true, RGB(255, 0, 255));
 	_loading->loadImage("pBullet", "playerbullet.bmp", 18, 18, true, RGB(255,0,255));
 	_loading->loadImage("eBullet", "enemybullet.bmp", 36, 36, true, RGB(255, 0, 255));
 	_loading->loadImage("weapon", "weapon.bmp", 172, 152, true, RGB(255, 0, 255));
@@ -79,7 +87,6 @@ void loadingScene::update(void)
 
 	if (!_loading->loadNext())
 	{
-
 		if (KEYMANAGER->isOnceKeyDown(VK_SPACE))
 		{
 			SCENEMANAGER->changeScene("titleScene");

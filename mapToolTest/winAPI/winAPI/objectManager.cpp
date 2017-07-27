@@ -72,7 +72,7 @@ void objectManager::setup(void)
 			{
 				_temp = new telepoter;
 				tp = (telepoter*)_temp;
-				tp->init(_Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].obj);
+				tp->init(_Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].obj, _Tile[y][x].roomnum);
 				_vObject.push_back(tp);
 			}
 		}

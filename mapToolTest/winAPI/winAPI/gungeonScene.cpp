@@ -58,7 +58,7 @@ void gungeonScene::setup(void)
 {
 	//타일 불러오기
 	{
-		HANDLE file, file2;
+		HANDLE file, file2, file3;
 		DWORD read;
 
 		file = CreateFile("stageOne", GENERIC_READ, 0, NULL,
@@ -71,8 +71,14 @@ void gungeonScene::setup(void)
 
 		ReadFile(file2, &DATABASE->spon, sizeof(POINT), &read, NULL);
 
+		file3 = CreateFile("roomscale", GENERIC_READ, 0, NULL,
+			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		ReadFile(file3, &DATABASE->roomcount, sizeof(int), &read, NULL);
+
 		CloseHandle(file);
 		CloseHandle(file2);
+		CloseHandle(file3);
 	}
 	//변수 초기화
 	{
@@ -99,13 +105,29 @@ void gungeonScene::setup(void)
 		_telepot = IMAGEMANAGER->findImage("telpo");
 		_icon = IMAGEMANAGER->findImage("icon");
 	}
-	//첫번째 통로 개방
-	for (int y = 0; y < TILEY; ++y)
+	//첫번째 통로 개방 및 기타 전투를 위한 준비
 	{
-		for (int x = 0; x < TILEX; ++x)
+		for (int y = 0; y < TILEY; ++y)
 		{
-			if (_Tile[y][x].roomnum != 1) { continue; }
-			_Tile[y][x].show = true;
+			for (int x = 0; x < TILEX; ++x)
+			{
+				if (_Tile[y][x].roomnum != 1) { continue; }
+				_Tile[y][x].show = true;
+			}
+		}
+
+		bool rmc = false;
+		bool rmf = false;
+		int sn = 1;
+		for (int i = 0; i < DATABASE->roomcount; ++i)
+		{
+			if (i == 0) { rmc = true; }
+			else { rmc = false; }
+			rmf = false;
+			sn = 1;
+			DATABASE->roomclear.push_back(rmc);
+			DATABASE->roomfight.push_back(rmf);
+			DATABASE->roomsequnce.push_back(sn);
 		}
 	}
 
@@ -194,8 +216,10 @@ void gungeonScene::keycontrol(void)
 		for (int i = 0; i < _telicon.size(); ++i)
 		{
 			POINT tempPt = _mouse;
-			tempPt.x -= 61;
-			tempPt.y -= 22;
+			int wid = (_cm->getPlayer()->getCharacterData().x - _mouse.x) / 2;
+			int hei = (_cm->getPlayer()->getCharacterData().y - _mouse.y) / 2;
+			tempPt.x -= wid;
+			tempPt.y -= hei;
 			if (PtInRect(&_telicon[i], tempPt))
 			{
 				DATABASE->past.x = _cm->getPlayer()->getCharacterData().x;

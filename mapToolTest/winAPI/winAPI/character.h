@@ -1,20 +1,6 @@
 #pragma once
 #include "gameNode.h"
 
-struct tagCharacter
-{
-	int frameX, frameY, framecount;
-	int gframeX, gframecount;
-	int idX, idY, roomnum;
-	int hp, maxhp;
-	float x, y, angle;
-	bool life;
-	RECT rc, crc, grc;
-	OBJECT obj;
-	image* img;
-	image* gun;
-};
-
 enum monsterSqence
 {
 	HOLD,
@@ -22,9 +8,41 @@ enum monsterSqence
 	DONE
 };
 
+struct tagCharacter
+{
+	int frameX, frameY, framecount;
+	int gframeX, gframecount;
+	int idX, idY, roomnum;
+	int hp, maxhp;
+	int spawnnum;
+	float x, y, angle;
+	bool fire;
+	bool life;
+	bool spawning;
+	fireDirection fdirec;
+	monsterSqence sqence;
+	RECT rc, crc, grc;
+	OBJECT obj;
+	image* img;
+	image* gun;
+};
+
 struct tagMonsters
 {
-	monsterSqence sqence;
+	image* img;
+	int fcount, shotcount;
+	int fX, shotdely;
+	int basefX, basefY;
+	int degree;
+	int* plX;
+	int* plY;
+	int astarcount;
+	int nextTile;
+	float moveangle;
+	bool* blankshot;
+	bool move;
+	bool moving;
+	bool shoting;
 };
 
 

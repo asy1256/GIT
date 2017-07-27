@@ -61,6 +61,11 @@ void door::update(void)
 							_Tile[y][x].show = true;
 						}
 					}
+					if (!DATABASE->roomclear[_roomnum - 1])
+					{
+						DATABASE->roomfight[_roomnum - 1] = true;
+						DATABASE->nowroom = _roomnum;
+					}
 				}
 				_ob.frameX = 3;
 				_action = false;

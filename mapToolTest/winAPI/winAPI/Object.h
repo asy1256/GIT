@@ -4,6 +4,7 @@
 struct tagObject
 {
 	int frameX, frameY, framecount;
+	int roomnum;
 	bool borken;
 	float x, y;
 	RECT rc, crc;

@@ -1,6 +1,6 @@
 #pragma once
 #include "character.h"
-class bulletB : public character
+class bulletKing : public character
 {
 private:
 	tagMonsters _bk;
@@ -19,7 +19,6 @@ public:
 	virtual tagCharacter &getCharacterData(void) { return _ch; }
 	virtual tagMonsters &getMonsterData(void) { return _bk; }
 
-	bulletB();
-	virtual ~bulletB();
+	bulletKing();
+	virtual ~bulletKing();
 };
-

@@ -237,8 +237,16 @@ void bulletE::move(void)
 	{
 		if (*_plmove)
 		{
-			_viBullet->x += cosf(_viBullet->angle) * (_viBullet->speed + 6);
-			_viBullet->y += -sinf(_viBullet->angle) * (_viBullet->speed + 6);
+			if (_viBullet->who == 1)
+			{
+				_viBullet->x += cosf(_viBullet->angle) * (_viBullet->speed + 6);
+				_viBullet->y += -sinf(_viBullet->angle) * (_viBullet->speed + 6);
+			}
+			else
+			{
+				_viBullet->x += cosf(_viBullet->angle) * (_viBullet->speed);
+				_viBullet->y += -sinf(_viBullet->angle) * (_viBullet->speed);
+			}
 		}
 		else
 		{
@@ -254,7 +262,7 @@ void bulletE::move(void)
 		{
 			for (int i = 0; i < _vC.size(); ++i)
 			{
-				if (IntersectRect(&rc, &_vC[i]->getCharacterData().rc, &_viBullet->rc) &&
+				if (IntersectRect(&rc, &_vC[i]->getCharacterData().rc, &_viBullet->rc) && _vC[i]->getCharacterData().sqence == DONE &&
 					_vC[i]->getCharacterData().life && _viBullet->fire && _vC[i]->getCharacterData().obj != NONE)
 				{
 					_viBullet->fire = false;
@@ -270,11 +278,11 @@ void bulletE::move(void)
 		else
 		{
 			if (IntersectRect(&rc, &_pl->getCharacterData().rc, &_viBullet->rc) && _viBullet->fire &&
-				_pl->getCharacterData().life)
+				_pl->getCharacterData().life && !_pl->_dodge)
 			{
 				_viBullet->fire = false;
+				if (!_pl->getPlayerData().hit) { --_pl->getCharacterData().hp; }
 				_pl->getPlayerData().hit = true;
-				--_pl->getCharacterData().hp;
 				if (_pl->getCharacterData().hp <= 0)
 				{
 					_pl->getCharacterData().life = false;

@@ -12,7 +12,7 @@ private:
 	tagTpData _tp;
 
 public:
-	virtual HRESULT init(float x, float y, OBJECT type);
+	virtual HRESULT init(float x, float y, OBJECT type, int roomnum);
 	virtual void release(void);
 	virtual void update(void);
 	virtual void render(HDC hdc);

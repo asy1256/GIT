@@ -34,6 +34,9 @@ public:
 	virtual bool &getAction(void) { return _action; }
 	virtual bool &getOpen(void) { return _open; }
 
+	inline RECT getdRC(void) { return _ob.rc; }
+	inline RECT getRC(void) { return _ob.crc; }
+
 	Object();
 	virtual ~Object();
 };

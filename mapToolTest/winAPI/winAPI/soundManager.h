@@ -13,7 +13,7 @@
 
 //Ã¤³Î °¹¼ö (¹öÆÛ~!!!)
 #define EXTRACHANNLEBUFFER 5
-#define SOUNDBUFFER 10
+#define SOUNDBUFFER 50
 
 //ÃÑ »ç¿îµå °¹¼ö
 #define TOTALSOUNDBUFFER (EXTRACHANNLEBUFFER + SOUNDBUFFER)

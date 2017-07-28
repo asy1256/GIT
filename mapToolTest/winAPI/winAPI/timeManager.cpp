@@ -48,15 +48,15 @@ void timeManager::render(HDC hdc)
 	{
 		//프레임 출력
 		sprintf_s(str, "framePerSec : %d", _timer->getFrameRate());
-		TextOut(hdc, 0, 0, str, strlen(str));
+		TextOut(hdc, 900, 0, str, strlen(str));
 	
 		//월드 타임 출력
-		sprintf_s(str, "worldTime : %f", _timer->getWorldTime());
-		TextOut(hdc, 0, 20, str, strlen(str));
+		//sprintf_s(str, "worldTime : %f", _timer->getWorldTime());
+		//TextOut(hdc, 0, 20, str, strlen(str));
 
 		//갱신 Tick 값 출력
-		sprintf_s(str, "elapsedTime : %f", _timer->getElapsedTime());
-		TextOut(hdc, 0, 40, str, strlen(str));
+		//sprintf_s(str, "elapsedTime : %f", _timer->getElapsedTime());
+		//TextOut(hdc, 0, 40, str, strlen(str));
 	}
 #else
 	if (_timer != NULL)

@@ -106,6 +106,7 @@ private:
 
 	bool _sampleOpen;					//타일선택창 열었는지 확인
 	bool _mapOpen;						//미니맵 열었는지 확인
+	bool _minimapdraw;
 	int _page;							//지금 펼치고 있는 샘플북 페이지
 	int _makeroom;						//지금 만드는 방에 부여될 번호
 	float _scroolmax;					//스크롤바 최대치

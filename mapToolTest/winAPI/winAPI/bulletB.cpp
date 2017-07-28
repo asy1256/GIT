@@ -95,9 +95,9 @@ void bulletB::render(HDC hdc)
 				_ch.gun->frameRender(hdc, _ch.grc.left, _ch.grc.top, _ch.gframeX, 0);
 			}
 			else { _ch.gun->frameRender(hdc, _ch.grc.left, _ch.grc.top, _ch.gframeX, 1); }
+			if (_bk.moving) { _ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, _ch.frameY); }
+			else { _ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, 0, _ch.frameY); }
 		}
-		if (_bk.moving) { _ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, _ch.frameY); }
-		else { _ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, 0, _ch.frameY); }
 	}
 }
 

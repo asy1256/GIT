@@ -33,6 +33,8 @@ private:
 public:
 	int roomcount = 0;
 	int nowroom = 0;
+	bool bossincount = false;
+	bool bang = false;
 	bool blank = false;
 	vector<bool> roomclear;
 	vector<bool> roomfight;

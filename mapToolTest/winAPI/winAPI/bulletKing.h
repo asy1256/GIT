@@ -6,6 +6,12 @@ private:
 	tagMonsters _bk;
 
 public:
+	int _shootingcount;
+	bool _circlefire;
+	bool _turnfire;
+	bool _tripleshot;
+
+public:
 	virtual HRESULT init(float x, float y, OBJECT obj, int roomnum, int spawn, int* plX, int* plY, bool* blankshot);
 	virtual void release(void);
 	virtual void update(void);

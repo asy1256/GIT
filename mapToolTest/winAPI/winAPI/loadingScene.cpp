@@ -60,6 +60,7 @@ HRESULT loadingScene::init(void)
 	_loading->loadFrameImage("ui", "ui.bmp", 336, 42, 7, 1, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("telpo", "telepoter.bmp", 640, 896, 5, 7, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("spawn", "spawn.bmp", 2115, 246, 15, 1, true, RGB(255, 0, 255));
+	_loading->loadFrameImage("blankfx", "blankshot.bmp", 4620, 420, 11, 1, true, RGB(255, 0, 255));
 	_loading->loadFrameImage("bossbattle", "bossbattle.bmp", 6144, 768, 6, 1, true, RGB(255, 0, 255));
 	_loading->loadImage("pBullet", "playerbullet.bmp", 18, 18, true, RGB(255,0,255));
 	_loading->loadImage("eBullet", "enemybullet.bmp", 36, 36, true, RGB(255, 0, 255));
@@ -67,6 +68,21 @@ HRESULT loadingScene::init(void)
 	_loading->loadImage("reloading", "reloading.bmp", 96, 21, true, RGB(255, 0, 255));
 	_loading->loadImage("reloadingbar", "reloadingbar.bmp", 3, 21, true, RGB(255, 0, 255));
 	_loading->loadImage("icon", "icons.bmp", 16, 16, true, RGB(255, 0, 255));
+
+	_loading->loadSound("gunfire", "pistolshoot.mp3", false, false);
+	_loading->loadSound("gunreload", "pistolreload.mp3", false, false);
+	_loading->loadSound("turntable", "tablepush.mp3", false, false);
+	_loading->loadSound("dodge", "dodge.mp3", false, false);
+	_loading->loadSound("sumon", "sumon.mp3", false, false);
+	_loading->loadSound("blankshoot", "blankshoot.mp3", false, false);
+	_loading->loadSound("telactivated", "telactivated.mp3", false, false);
+	_loading->loadSound("teleport", "teleport.mp3", false, false);
+	_loading->loadSound("edie", "edie.mp3", false, false);
+	_loading->loadSound("nutfire", "nutfire.mp3", false, false);
+	_loading->loadSound("dooropen", "dooropen.mp3", false, false);
+	_loading->loadSound("circleshot", "circleshot.mp3", false, false);
+	_loading->loadSound("turnshot", "turnshot.mp3", false, false);
+
 
 	return S_OK;
 }

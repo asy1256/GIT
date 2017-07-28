@@ -16,6 +16,7 @@ void gungeonScene::objectColision(void)
 		{
 			if (!ovtemp[i]->getOpen() && !ovtemp[i]->getAction())
 			{
+				SOUNDMANAGER->play("dooropen");
 				ovtemp[i]->getAction() = true;
 				if (temprc.right == ovtemp[i]->getObjectData().crc.right || temprc.bottom == ovtemp[i]->getObjectData().crc.bottom)
 				{

@@ -21,6 +21,7 @@ HRESULT telepoter::init(float x, float y, OBJECT type, int roomnum)
 	_ob.x = x;
 	_ob.y = y;
 	_ob.rc = RectMake(_ob.x, _ob.y, _ob.img->getFrameWidth(), _ob.img->getFrameHeight());
+	_ob.crc = RectMake(_ob.rc.left, _ob.rc.bottom - 20, _ob.img->getFrameWidth(), 20);
 
 	//_ob.frameY = 3;
 	//_tp.turnon = true;
@@ -43,7 +44,7 @@ void telepoter::render(HDC hdc)
 
 void telepoter::frameup(void)
 {
-	if (DATABASE->roomclear[_ob.roomnum - 1] && !_tp.action) { _tp.action = true; }
+	if (DATABASE->roomclear[_ob.roomnum - 1] && !_tp.action) { _tp.action = true; SOUNDMANAGER->play("telactivated"); }
 
 	//텔레포터 활성화
 	if (_tp.action && !_tp.turnon)

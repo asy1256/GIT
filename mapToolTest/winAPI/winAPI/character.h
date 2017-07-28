@@ -61,6 +61,9 @@ public:
 
 	virtual tagCharacter &getCharacterData(void) { return _ch; }
 
+	inline RECT getdRC(void) { return _ch.rc; }
+	inline RECT getRC(void) { return _ch.crc; }
+
 	character();
 	virtual ~character();
 };

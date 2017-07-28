@@ -13,6 +13,9 @@ HRESULT bulletKing::init(float x, float y, OBJECT obj, int roomnum, int spawn, i
 {
 	character::init();
 
+	_circlefire = _turnfire = _tripleshot = false;
+	_shootingcount = 0;
+
 	_bk.img = IMAGEMANAGER->findImage("spawn");
 	_bk.fcount = _bk.fX = 0;
 	_bk.move = _bk.moving = _bk.shoting = false;
@@ -67,6 +70,7 @@ void bulletKing::update(void)
 			_ch.idY = (_ch.crc.top + 10) / TILESIZE;
 		}
 	}
+	else { frameup(); }
 }
 
 void bulletKing::render(HDC hdc)
@@ -79,9 +83,13 @@ void bulletKing::render(HDC hdc)
 	{
 		if (_ch.life)
 		{
-
+			_ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, _ch.frameY);
 		}
-		_ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, _ch.frameY);
+		else
+		{
+			if (_ch.frameY == 3 && _ch.frameX == 10) { _ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, 0); }
+			else { _ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, _ch.frameY); }
+		}
 	}
 }
 
@@ -100,7 +108,8 @@ void bulletKing::move(void)
 	}
 	else
 	{
-		if (300 < getDistance(_ch.x, _ch.y, _Tile[*_bk.plY][*_bk.plX].rc.left + TILESIZE / 2, _Tile[*_bk.plY][*_bk.plX].rc.top + TILESIZE / 2))
+		if (300 < getDistance(_ch.x, _ch.y, _Tile[*_bk.plY][*_bk.plX].rc.left + TILESIZE / 2, _Tile[*_bk.plY][*_bk.plX].rc.top + TILESIZE / 2) &&
+			(!_turnfire && !_circlefire))
 		{
 			int nidx = _Path[_bk.nextTile].x;
 			int nidy = _Path[_bk.nextTile].y;
@@ -145,43 +154,103 @@ void bulletKing::angleup(void)
 
 void bulletKing::frameup(void)
 {
-	//걸어다니는거
-	++_ch.framecount;
-	if (_ch.framecount >= 12)
+	
+	if (_ch.life)
 	{
-		++_ch.frameX;
-		_ch.framecount = 0;
-		if (_ch.frameX >= 10) { _ch.frameX = 0; }
-	}
-	//총쏘는 대기시간
-	if (!_bk.shoting)
-	{
-		++_bk.shotcount;
-		if (_bk.shotcount >= _bk.shotdely)
+		if (!_bk.shoting)
 		{
-			_bk.shotcount = 0;
-			_bk.shotdely = RND->getFromIntTo(80, 110);
-			_bk.shoting = true;
-		}
-	}
-	else
-	{
-		if (!*_bk.blankshot)
-		{
-			//총 프레임
-			++_ch.gframecount;
-			if (_ch.gframecount >= 5)
+			//걸어다니는거
+			++_ch.framecount;
+			if (_ch.framecount >= 12)
 			{
-				_ch.gframecount = 0;
-				++_ch.gframeX;
-				if (_ch.gframeX >= 4)
-				{
-					_ch.gframeX = 0;
-					//_ch.fire = true;
-					_bk.shoting = false;
-				}
+				++_ch.frameX;
+				_ch.framecount = 0;
+				if (_ch.frameX >= 10) { _ch.frameX = 0; }
+			}
+			//총쏘는 대기시간
+			++_bk.shotcount;
+			if (_bk.shotcount >= _bk.shotdely)
+			{
+				_bk.shotcount = 0;
+				_bk.shotdely = RND->getFromIntTo(80, 110);
+				_bk.shoting = true;
+				_ch.frameX = 0;
+				int patern = RND->getInt(180) + 1;
+				if (patern >= 1 && patern <= 60) { _circlefire = true; _ch.frameY = 2; }
+				else if (patern >= 61 && patern <= 120) { _turnfire = true; _ch.frameY = 1; }
+				else { _tripleshot = true; }
 			}
 		}
+		else
+		{
+			if (_circlefire)
+			{
+				if (_shootingcount >= 1)
+				{
+					_shootingcount = 0;
+					_circlefire = false;
+					_bk.shoting = false;
+				}
+				else
+				{
+					++_ch.framecount;
+					if (_ch.framecount >= 5)
+					{
+						_ch.framecount = 0;
+						++_ch.frameX;
+						if (_ch.frameX >= 8)
+						{
+							++_shootingcount;
+							_ch.frameX = 0;
+							_ch.frameY = 0;
+							_ch.fire = true;
+						}
+					}
+				}
+			}
+			else if (_turnfire)
+			{
+				++_ch.framecount;
+				if (_ch.framecount >= 8)
+				{
+					_ch.framecount = 0;
+					++_ch.frameX;
+					if (_ch.frameX >= 3 && _shootingcount < 20)
+					{
+						_ch.frameX = 1;
+						_ch.fire = true;
+						++_shootingcount;
+					}
+					else if (_ch.frameX >= 11)
+					{
+						_shootingcount = 0;
+						_ch.frameX = 0;
+						_ch.frameY = 0;
+						_bk.shoting = false;
+						_turnfire = false;
+					}
+				}
+			}
+			else if (_tripleshot)
+			{
+				_bk.shoting = false;
+			}
+		}
+	}
+	//뒤진거
+	else
+	{
+		_ch.frameY = 3;
+		if (_ch.frameY == 3 && _ch.frameX != 10)
+		{
+			++_ch.framecount;
+			if (_ch.framecount >= 12)
+			{
+				++_ch.frameX;
+				_ch.framecount = 0;
+				if (_ch.frameX >= 11) { _ch.frameX = 10; }
+			}
+		}	
 	}
 }
 

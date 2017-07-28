@@ -34,10 +34,15 @@ void gungeonScene::release(void)
 void gungeonScene::update(void)
 {
 	gameNode::update();
+	SOUNDMANAGER->update();
 	mousemove();
 	keycontrol();
-	_cm->update();
-	_om->update();
+	frameup();
+	if (!DATABASE->bossincount)
+	{
+		_cm->update();
+		_om->update();
+	}
 	objectColision();
 	_cam->update();
 	if (_mapOpen) { iconup(); }
@@ -91,6 +96,8 @@ void gungeonScene::setup(void)
 
 		_basept = _minimappt = PointMake(0, 0);
 
+		_framecount = _frameX = 0;
+
 		_mapOpen = false;
 
 		_cimg = IMAGEMANAGER->findImage("bimg");
@@ -104,6 +111,8 @@ void gungeonScene::setup(void)
 		_ui = IMAGEMANAGER->findImage("ui");
 		_telepot = IMAGEMANAGER->findImage("telpo");
 		_icon = IMAGEMANAGER->findImage("icon");
+		_incount = IMAGEMANAGER->findImage("bossbattle");
+		_blankFx = IMAGEMANAGER->findImage("blankfx");
 	}
 	//첫번째 통로 개방 및 기타 전투를 위한 준비
 	{
@@ -200,6 +209,18 @@ void gungeonScene::setup(void)
 			_sample->frameRender(_field->getMemDC(), _Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].wallX, _Tile[y][x].wallY);
 		}
 	}
+	//데코
+	for (int y = 0; y < TILEY; ++y)
+	{
+		for (int x = 0; x < TILEX; ++x)
+		{
+			if (_Tile[y][x].obj == NONE) { continue; }
+			if (_Tile[y][x].obj == DECO || _Tile[y][x].obj == SHOP_MASTER)
+			{
+				_sample->frameRender(_field->getMemDC(), _Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].objframeX, _Tile[y][x].objframeY);
+			}
+		}
+	}
 }
 
 void gungeonScene::keycontrol(void)
@@ -213,6 +234,7 @@ void gungeonScene::keycontrol(void)
 
 	if (KEYMANAGER->isOnceKeyDown(VK_LBUTTON))
 	{
+		//텔레포터 타기
 		for (int i = 0; i < _telicon.size(); ++i)
 		{
 			POINT tempPt = _mouse;
@@ -222,6 +244,7 @@ void gungeonScene::keycontrol(void)
 			tempPt.y -= hei;
 			if (PtInRect(&_telicon[i], tempPt))
 			{
+				SOUNDMANAGER->play("teleport");
 				DATABASE->past.x = _cm->getPlayer()->getCharacterData().x;
 				DATABASE->past.y = _cm->getPlayer()->getCharacterData().y;
 				DATABASE->moveTo.x = _telimg[i].x + TILESIZE;
@@ -229,6 +252,38 @@ void gungeonScene::keycontrol(void)
 				*_telimg[i].frameY = 5;
 				*_telimg[i].activated = true;
 				_cm->getPlayer()->getPlayerData().teleporting = true;
+			}
+		}
+	}
+}
+
+void gungeonScene::frameup(void)
+{
+	if (DATABASE->bang)
+	{
+		++_framecount;
+		if (_framecount >= 7)
+		{
+			_framecount = 0;
+			++_frameX;
+			if (_frameX >= 11)
+			{
+				_frameX = 0;
+				DATABASE->bang = false;
+			}
+		}
+	}
+	if (DATABASE->bossincount)
+	{
+		++_framecount;
+		if (_framecount >= 25)
+		{
+			_framecount = 0;
+			++_frameX;
+			if (_frameX >= 6)
+			{
+				_frameX = 0;
+				DATABASE->bossincount = false;
 			}
 		}
 	}
@@ -271,19 +326,27 @@ void gungeonScene::draw(void)
 		if (!IntersectRect(&RectMake(0, 0, 0, 0), &_telimg[i].rc, &_cam->getRC())) { continue; }
 		_telepot->frameRender(getBackDC(), _telimg[i].x, _telimg[i].y, *_telimg[i].frameX, *_telimg[i].frameY);
 	}
+	//공포탄 발싸!
+	if (DATABASE->bang)
+	{
+		RECT temp = RectMakeCenter(_cm->getPlayer()->getCharacterData().x, _cm->getPlayer()->getCharacterData().y, _blankFx->getFrameWidth(), _blankFx->getFrameHeight());
+		_blankFx->frameRender(getBackDC(), temp.left, temp.top, _frameX, 0);
+	}
 
-
-	_cm->render(getBackDC());
-	_om->render(getBackDC());
-	//이 사이에 플레이어, 적군, 오브젝트 짬뽕시켜서 Z-order해준다음에 뿌려주자
+	Z_order();
+	//총알 발싸!
+	_cm->getBullet()->render(getBackDC());
 
 	//벽대가리
 	for (int y = sy; y < ey; ++y)
 	{
 		for (int x = sx; x < ex; ++x)
 		{
+			if (!IntersectRect(&RectMake(0, 0, 0, 0), &_Tile[y][x].rc, &_cam->getRC())) { continue; }
 			if (_Tile[y][x].obj == WALL_TOP)
+			{
 				_sample->frameRender(getBackDC(), _Tile[y][x].rc.left, _Tile[y][x].rc.top, _Tile[y][x].objframeX, _Tile[y][x].objframeY);
+			}
 		}
 	}
 
@@ -382,14 +445,13 @@ void gungeonScene::draw(void)
 		}
 	}
 
-
 	//테스트
-	sprintf(str, "X좌표 : %f Y좌표 : %f", _cm->getPlayer()->getCharacterData().x, _cm->getPlayer()->getCharacterData().y);
+	/*sprintf(str, "X좌표 : %f Y좌표 : %f", _cm->getPlayer()->getCharacterData().x, _cm->getPlayer()->getCharacterData().y);
 	TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top, str, strlen(str));
 	sprintf(str, "각도 디그리값 : %d", RADIAN_TO_DEGREE(_cm->getPlayer()->getCharacterData().angle));
 	TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top + 20, str, strlen(str));
 	sprintf(str, "mX좌표 : %d mY좌표 : %d", (int)_mouse.x, (int)_mouse.y);
-	TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top + 40, str, strlen(str));
+	TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top + 40, str, strlen(str));*/
 
 	//미니맵
 	if (_mapOpen)
@@ -400,12 +462,36 @@ void gungeonScene::draw(void)
 			if (*_telimg[i].turnon)
 			{
 				_icon->render(getBackDC(), _telicon[i].left, _telicon[i].top);
-				//Rectangle(getBackDC(), _telicon[i].left, _telicon[i].top, _telicon[i].right, _telicon[i].bottom);
-				sprintf(str, "iX좌표 : %d iY좌표 : %d", _telicon[i].left, _telicon[i].top);
-				TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top + 60, str, strlen(str));
+				/*sprintf(str, "iX좌표 : %d iY좌표 : %d", _telicon[i].left, _telicon[i].top);
+				TextOut(getBackDC(), _cam->getRC().right - 250, _cam->getRC().top + 60, str, strlen(str));*/
 			}
 		}
-	}	
+	} 
+	if (DATABASE->bossincount) { _incount->frameRender(getBackDC(), _cam->getRC().left, _cam->getRC().top, _frameX, 0); }
+}
+
+void gungeonScene::Z_order(void)
+{
+	vector<gameNode*> _vOutput;
+
+	for (int i = 0; i < _om->getObjectvector().size(); ++i)
+	{
+		_vOutput.push_back(_om->getObjectvector()[i]);
+	}
+	for (int i = 0; i < _cm->getCharacterVector().size(); ++i)
+	{
+		_vOutput.push_back(_cm->getCharacterVector()[i]);
+	}
+
+	sort(_vOutput.begin(), _vOutput.end(), compare());
+
+	RECT temp = RectMake(0, 0, 0, 0);
+	for (int i = 0; i < _vOutput.size(); ++i)
+	{
+		if (!IntersectRect(&temp, &_vOutput[i]->getdRC(), &_cam->getRC())) { continue; }
+		_vOutput[i]->render(getBackDC());
+	}
+	_vOutput.clear();
 }
 
 void gungeonScene::minimap(void)

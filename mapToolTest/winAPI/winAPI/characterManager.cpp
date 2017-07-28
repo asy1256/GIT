@@ -93,18 +93,164 @@ void characterManager::update(void)
 	enemyspawn();
 
 	//이제 업데이트 부분
+	//for (_viCharacter = _vCharacter.begin(); _viCharacter != _vCharacter.end();)
+	//{
+	//	(*_viCharacter)->update();
+	//
+	//	if (_vCharacter[i]->getCharacterData().obj != NONE)
+	//	{
+	//		if (_vCharacter[i]->getCharacterData().obj == SHOTGUN_RED)
+	//		{
+	//			if (_vCharacter[i]->getCharacterData().fire)
+	//			{
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - PI / 4, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 5, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - PI / 8, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 5, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + PI / 8, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + PI / 4, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_vCharacter[i]->getCharacterData().fire = false;
+	//			}
+	//		}
+	//		else if (_vCharacter[i]->getCharacterData().obj == GUN_NUT)
+	//		{
+	//			if (_vCharacter[i]->getCharacterData().fire)
+	//			{
+	//				//반원 발사
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - 0.8f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - 0.7f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - 0.6f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - 0.5f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 5, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - 0.4f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - 0.3f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - 0.2f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle - 0.1f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + 0.1f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + 0.2f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + 0.3f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 5, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + 0.4f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + 0.5f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + 0.6f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + 0.7f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle + 0.8f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				//화살표 발사는 생각좀해보고
+	//				_vCharacter[i]->getCharacterData().fire = false;
+	//			}
+	//		}
+	//		else if (_vCharacter[i]->getCharacterData().obj == BULLET_KING)
+	//		{
+	//			bulletKing* mon = (bulletKing*)_vCharacter[i];
+	//			if (mon->getCharacterData().fire)
+	//			{
+	//				if (mon->_circlefire)
+	//				{
+	//					for (int j = 0; j < 36; ++j)
+	//					{
+	//						if (j == 0)
+	//						{
+	//							_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//								0, 3.5f, RIGHT, 2);
+	//						}
+	//						else
+	//						{
+	//							_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//								0 + (PI2 / 36) * j, 3.5f, RIGHT, 2);
+	//						}
+	//					}
+	//					mon->getCharacterData().fire = false;
+	//				}
+	//				if (mon->_turnfire)
+	//				{
+	//					if (mon->_shootingcount % 2 == 1)
+	//					{
+	//						for (int j = 0; j < 4; ++j)
+	//						{
+	//							if (j == 0)
+	//							{
+	//								_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//									0, 3.5f, RIGHT, 2);
+	//							}
+	//							else
+	//							{
+	//								_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//									0 + (PI / 2) * j, 3.5f, RIGHT, 2);
+	//							}
+	//						}
+	//					}
+	//					else
+	//					{
+	//						for (int j = 0; j < 4; ++j)
+	//						{
+	//							if (j == 0)
+	//							{
+	//								_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//									PI / 4, 3.5f, RIGHT, 2);
+	//							}
+	//							else
+	//							{
+	//								_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//									(PI / 4) + (PI / 2) * j, 3.5f, RIGHT, 2);
+	//							}
+	//						}
+	//					}
+	//					mon->getCharacterData().fire = false;
+	//				}
+	//			}
+	//		}
+	//		else
+	//		{
+	//			if (_vCharacter[i]->getCharacterData().fire)
+	//			{
+	//				_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+	//					_vCharacter[i]->getCharacterData().angle, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
+	//				_vCharacter[i]->getCharacterData().fire = false;
+	//			}
+	//		}
+	//	}
+	//
+	//	if (!(*_viCharacter)->getCharacterData().life && (*_viCharacter)->getCharacterData().obj != BULLET_KING)
+	//	{
+	//		_viCharacter = _vCharacter.erase(_viCharacter++);
+	//	}
+	//	else { ++_viCharacter; }
+	//}
+
 	for (int i = 0; i < _vCharacter.size(); ++i)
 	{
 		if ((_vCharacter[i]->getCharacterData().sqence == HOLD && _vCharacter[i]->getCharacterData().obj != NONE) ||
-			!_vCharacter[i]->getCharacterData().life) { continue; }
+			(!_vCharacter[i]->getCharacterData().life && _vCharacter[i]->getCharacterData().obj != BULLET_KING)) { continue; }
 		//업데이트 하고
 		_vCharacter[i]->update();
+		//총도 빵빵 쏴주고
 		if (_vCharacter[i]->getCharacterData().obj != NONE)
 		{
 			if (_vCharacter[i]->getCharacterData().obj == SHOTGUN_RED)
 			{
 				if (_vCharacter[i]->getCharacterData().fire)
 				{
+					SOUNDMANAGER->play("gunfire");
 					_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
 						_vCharacter[i]->getCharacterData().angle - PI / 4, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
 					_ebullet->fire(_vCharacter[i]->getCharacterData().x + 5, _vCharacter[i]->getCharacterData().y,
@@ -122,6 +268,7 @@ void characterManager::update(void)
 			{
 				if (_vCharacter[i]->getCharacterData().fire)
 				{
+					SOUNDMANAGER->play("nutfire");
 					//반원 발사
 					_ebullet->fire(_vCharacter[i]->getCharacterData().x + 10, _vCharacter[i]->getCharacterData().y,
 						_vCharacter[i]->getCharacterData().angle - 0.8f, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
@@ -161,10 +308,73 @@ void characterManager::update(void)
 					_vCharacter[i]->getCharacterData().fire = false;
 				}
 			}
+			else if (_vCharacter[i]->getCharacterData().obj == BULLET_KING)
+			{
+				bulletKing* mon = (bulletKing*)_vCharacter[i];
+				if (mon->getCharacterData().fire)
+				{
+					if (mon->_circlefire)
+					{
+						SOUNDMANAGER->play("circleshot");
+						for (int j = 0; j < 36; ++j)
+						{
+							if (j == 0)
+							{
+								_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+									0, 3.5f, RIGHT, 2);
+							}
+							else
+							{
+								_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+									0 + (PI2 / 36) * j, 3.5f, RIGHT, 2);
+							}
+						}
+						mon->getCharacterData().fire = false;
+					}
+					if (mon->_turnfire)
+					{
+						if (mon->_shootingcount == 1) { SOUNDMANAGER->play("turnshot"); }
+						if (mon->_shootingcount % 2 == 1)
+						{
+							for (int j = 0; j < 4; ++j)
+							{
+								if (j == 0)
+								{
+									_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+										0, 3.5f, RIGHT, 2);
+								}
+								else
+								{
+									_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+										0 + (PI / 2) * j, 3.5f, RIGHT, 2);
+								}
+							}
+						}
+						else
+						{
+							for (int j = 0; j < 4; ++j)
+							{
+								if (j == 0)
+								{
+									_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+										PI / 4, 3.5f, RIGHT, 2);
+								}
+								else
+								{
+									_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
+										(PI / 4) + (PI / 2) * j, 3.5f, RIGHT, 2);
+								}
+							}
+						}
+						mon->getCharacterData().fire = false;
+					}
+				}
+			}
 			else
 			{
 				if (_vCharacter[i]->getCharacterData().fire)
 				{
+					SOUNDMANAGER->play("gunfire");
 					_ebullet->fire(_vCharacter[i]->getCharacterData().x, _vCharacter[i]->getCharacterData().y,
 						_vCharacter[i]->getCharacterData().angle, 3.5f, _vCharacter[i]->getCharacterData().fdirec, 2);
 					_vCharacter[i]->getCharacterData().fire = false;
@@ -172,6 +382,7 @@ void characterManager::update(void)
 			}
 		}
 	}
+
 	//콩포탄 조진다
 	if (_pl->getBlankshot() && DATABASE->blank)
 	{
@@ -181,6 +392,7 @@ void characterManager::update(void)
 	//플레이어 총쏘기
 	if (_pl->getCharacterData().gframeX == 0 && _pl->getCharacterData().gframecount == 1)
 	{
+		SOUNDMANAGER->play("gunfire");
 		_ebullet->fire(_pl->getCharacterData().x, _pl->getCharacterData().y, _pl->getCharacterData().angle, 10.0f,
 			_pl->_direc, 1);
 	}
@@ -222,6 +434,7 @@ void characterManager::enemyspawn(void)
 			//스폰하지 않았다면 스폰시켜주자
 			if (!_vCharacter[i]->getCharacterData().spawning)
 			{
+				if (_vCharacter[i]->getCharacterData().obj == BULLET_KING) { DATABASE->bossincount = true; }
 				_vCharacter[i]->getCharacterData().spawning = true;
 				_vCharacter[i]->getCharacterData().sqence = SPAWN;
 			}

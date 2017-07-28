@@ -204,11 +204,11 @@ void bulletE::fire(float x, float y, float angle, float speed, fireDirection dir
 {
 	tagBullet bullet;
 	ZeroMemory(&bullet, sizeof(tagBullet));
-	bullet.direction = direction;
 	bullet.who = who;
 	bullet.fire = true;
 	bullet.count = 0;
 	bullet.angle = angle;
+	bullet.direction = direction;
 	bullet.speed = speed;
 	if (who == 1) //플레이어
 	{
@@ -269,8 +269,10 @@ void bulletE::move(void)
 					--_vC[i]->getCharacterData().hp;
 					if (_vC[i]->getCharacterData().hp <= 0)
 					{
+						SOUNDMANAGER->play("edie");
 						_vC[i]->getCharacterData().hp = 0;
 						_vC[i]->getCharacterData().life = false;
+						_vC[i]->getCharacterData().frameX = 0;
 					}
 				}
 			}

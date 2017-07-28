@@ -17,10 +17,14 @@ public:
 	virtual void release(void);
 	virtual void update(void);
 	virtual void render(void);
+	virtual void render(HDC hdc) {};
 
 	image* getBackBuffer(void) {return _backBuffer;}
 	HDC getMemDC() {return _backBuffer->getMemDC();}
 	HDC getHDC() {return _hdc;}
+
+	virtual RECT getdRC() { return RectMake(0, 0, 0, 0); }
+	virtual RECT getRC() { return RectMake(0, 0, 0, 0); }
 
 	//메시지 프로시져
 	LRESULT MainProc(HWND hWnd, UINT iMessage, 

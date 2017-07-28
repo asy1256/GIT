@@ -1,7 +1,6 @@
 #pragma once
 
 #include "character.h"
-#include "bullets.h"
 
 class objectManager;
 
@@ -28,7 +27,6 @@ private:
 
 	RECT _reloadingbar;
 
-	bullet* _bullet;
 	objectManager* _obm;
 public:
 	bool _dodge, _move, _fire, _bfire, _reload;

@@ -219,6 +219,7 @@ void mapTool::keycontrol(void)
 	if (KEYMANAGER->isOnceKeyDown('M'))
 	{
 		_mapOpen = (_mapOpen == false) ? true : false;
+		_minimapdraw = true;
 	}
 	//마우스 휠 액션
 	if (_sampleOpen)
@@ -248,20 +249,28 @@ void mapTool::keycontrol(void)
 		{
 			++_TILEMINISIZE;
 			if (_TILEMINISIZE > 8) { _TILEMINISIZE = 8; }
+			for (int y = 0; y < TILEY; ++y)
+			{
+				for (int x = 0; x < TILEX; ++x)
+				{
+					_tile[y][x].minirc = RectMake(x * _TILEMINISIZE, y * _TILEMINISIZE, _TILEMINISIZE, _TILEMINISIZE);
+				}
+			}
+			_minimapdraw = true;
 		}
 		if (_wheelDown)
 		{
 			--_TILEMINISIZE;
 			if (_TILEMINISIZE < 4) { _TILEMINISIZE = 4; }
-		}
-		for (int y = 0; y < TILEY; ++y)
-		{
-			for (int x = 0; x < TILEX; ++x)
+			for (int y = 0; y < TILEY; ++y)
 			{
-				_tile[y][x].minirc = RectMake(x * _TILEMINISIZE, y * _TILEMINISIZE, _TILEMINISIZE, _TILEMINISIZE);
+				for (int x = 0; x < TILEX; ++x)
+				{
+					_tile[y][x].minirc = RectMake(x * _TILEMINISIZE, y * _TILEMINISIZE, _TILEMINISIZE, _TILEMINISIZE);
+				}
 			}
+			_minimapdraw = true;
 		}
-
 		_wheelUp = false;
 		_wheelDown = false;
 	}
@@ -1934,23 +1943,32 @@ void mapTool::draw(void)
 
 void mapTool::minidraw(void)
 {
-	HBRUSH bluebrush = CreateSolidBrush(RGB(0, 0, 255));
-	HBRUSH withebrush = CreateSolidBrush(RGB(255, 255, 255));
-	_black->render(_miniimg->getMemDC());
-	for (int y = 0; y < TILEY; ++y)
+	if (_minimapdraw)
 	{
-		for (int x = 0; x < TILEX; ++x)
+		HBRUSH bluebrush = CreateSolidBrush(RGB(0, 0, 255));
+		HBRUSH withebrush = CreateSolidBrush(RGB(255, 255, 255));
+		_black->render(_miniimg->getMemDC());
+
+		for (int y = 0; y < TILEY; ++y)
 		{
-			if (_tile[y][x].terrain != EMPTY)
+			for (int x = 0; x < TILEX; ++x)
 			{
-				FillRect(_miniimg->getMemDC(), &_tile[y][x].minirc, bluebrush);
-			}
-			if (_tile[y][x].wall != VOID_WALL)
-			{
-				FillRect(_miniimg->getMemDC(), &_tile[y][x].minirc, withebrush);
+				if (_tile[y][x].terrain != EMPTY)
+				{
+					FillRect(_miniimg->getMemDC(), &_tile[y][x].minirc, bluebrush);
+				}
+				if (_tile[y][x].wall != VOID_WALL)
+				{
+					FillRect(_miniimg->getMemDC(), &_tile[y][x].minirc, withebrush);
+				}
 			}
 		}
+
+		DeleteObject(bluebrush);
+		DeleteObject(withebrush);
+		_minimapdraw = false;
 	}
+	
 	RECT mmaprc = RectMake(_cam->getRC().left + 100, _cam->getRC().top + 80, 800, 600);
 
 	POINT mtemp;
@@ -1964,9 +1982,6 @@ void mapTool::minidraw(void)
 	LineMake(getBackDC(), ftemp.right, ftemp.top, ftemp.right, ftemp.bottom);
 	LineMake(getBackDC(), ftemp.right, ftemp.bottom, ftemp.left, ftemp.bottom);
 	LineMake(getBackDC(), ftemp.left, ftemp.bottom, ftemp.left, ftemp.top);
-
-	DeleteObject(bluebrush);
-	DeleteObject(withebrush);
 }
 
 void mapTool::selectdraw(void)

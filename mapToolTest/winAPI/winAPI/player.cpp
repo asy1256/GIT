@@ -53,17 +53,12 @@ HRESULT player::init(float x, float y)
 	_reloadingbar = RectMakeCenter(_ch.x, _ch.rc.top - _reloadgage->getHeight(), _reloadgage->getWidth(), _reloadgage->getHeight());
 	_nowloading = (_currentreloadtime / _reloadtime) * _reloadgage->getWidth();
 
-	_bullet = new bullet;
-	_bullet->init(800);
-
 	return S_OK;
 }
 
 void player::release(void)
 {
 	character::release();
-	_bullet->release();
-	SAFE_DELETE(_bullet);
 }
 
 void player::update(void)
@@ -74,7 +69,6 @@ void player::update(void)
 	frameup();
 	colision();
 
-	_bullet->update();
 	_ch.rc = RectMakeCenter(_ch.x, _ch.y, _ch.img->getFrameWidth(), _ch.img->getFrameHeight());
 	_ch.crc = RectMake(_ch.rc.left, _ch.rc.bottom - 20, _ch.img->getFrameWidth(), 20);
 	if ((_degree <= 89 && _degree >= 0) || (_degree >= 270 && _degree <= 360))
@@ -114,8 +108,6 @@ void player::render(HDC hdc)
 		_reloadbar->render(hdc, _reloadingbar.left + _nowloading, _reloadingbar.top);
 	}
 	_ch.img->frameRender(hdc, _ch.rc.left, _ch.rc.top, _ch.frameX, _ch.frameY);
-	Rectangle(hdc, _ch.crc.left, _ch.crc.top, _ch.crc.right, _ch.crc.bottom);
-	_bullet->render(hdc);
 }
 
 void player::keycontrol(void)
@@ -161,7 +153,14 @@ void player::keycontrol(void)
 	//°øÆ÷Åº
 	if (KEYMANAGER->isOnceKeyDown('Q'))
 	{
-		if (!_bfire && _pl.blankshot != 0) { _bfire = true; DATABASE->blank = true; --_pl.blankshot; }
+		if (!_bfire && _pl.blankshot != 0)
+		{
+			SOUNDMANAGER->play("blankshoot");
+			_bfire = true;
+			DATABASE->blank = true; 
+			DATABASE->bang = true;
+			--_pl.blankshot;
+		}
 	}
 	//¹ä»óµÚÁý°Å³ª ¹¹ µî µî ÇØº¾½Ã´Ù.
 	if (KEYMANAGER->isOnceKeyDown('E'))
@@ -178,6 +177,7 @@ void player::keycontrol(void)
 					table* temp = (table*)_obm->getObjectvector()[i];
 					if (IntersectRect(&rc, &temp->getObjectData().rc, &_ch.rc) && !temp->getTableData().action && !temp->getTableData().stand)
 					{
+						SOUNDMANAGER->play("turntable");
 						temp->getTableData().action = true;
 						if (rc.top == temp->getObjectData().rc.top) { temp->getTableData().down = true; temp->getObjectData().frameY = 3; }
 						if (rc.bottom == temp->getObjectData().rc.bottom) { temp->getTableData().up = true; temp->getObjectData().frameY = 1; }
@@ -191,6 +191,8 @@ void player::keycontrol(void)
 					telepoter* tp = (telepoter*)_obm->getObjectvector()[i];
 					if (IntersectRect(&rc, &_ch.crc, &tp->getObjectData().rc) && tp->getTpData().activated && tp->getTpData().turnon)
 					{
+						SOUNDMANAGER->play("teleport");
+
 						tp->getTpData().activated = false;
 						tp->getObjectData().frameY = 3;
 
@@ -214,7 +216,11 @@ void player::keycontrol(void)
 	//ÀçÀåÀü
 	if (KEYMANAGER->isOnceKeyDown('R'))
 	{
-		if (_ammo != 10 && !_reload) { _reload = true; }
+		if (_ammo != 10 && !_reload)
+		{
+			SOUNDMANAGER->play("gunreload");
+			_reload = true;
+		}
 	}
 	//ÃÑ½î±â
 	if (KEYMANAGER->isStayKeyDown(VK_LBUTTON))
@@ -226,6 +232,7 @@ void player::keycontrol(void)
 	{
 		if (!_dodge)
 		{
+			SOUNDMANAGER->play("dodge");
 			_ch.frameX = 0;
 			if (_right && _up) { _ch.frameY = 2; }
 			else if (_right && _down) { _ch.frameY = 7; }

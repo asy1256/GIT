@@ -79,10 +79,12 @@ void gunnut::render(HDC hdc)
 	}
 	if (_ch.sqence == DONE)
 	{
-		if (!_bk.shoting) { _ch.img->frameRender(hdc, _drc.left, _drc.top, _ch.frameX, _ch.frameY); }
-		else { _ch.img->frameRender(hdc, _drc.left, _drc.top, _ch.frameX, _bk.basefY); }
+		if (_ch.life)
+		{
+			if (!_bk.shoting) { _ch.img->frameRender(hdc, _drc.left, _drc.top, _ch.frameX, _ch.frameY); }
+			else { _ch.img->frameRender(hdc, _drc.left, _drc.top, _ch.frameX, _bk.basefY); }
+		}
 	}
-	Rectangle(hdc, _ch.crc.left, _ch.crc.top, _ch.crc.right, _ch.crc.bottom);
 }
 
 void gunnut::move(void)
